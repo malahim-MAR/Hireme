@@ -13,6 +13,10 @@ import DevChat from './Pages/DevChat'
 import HirePage from './Pages/HirePage'
 import CompanyChat from './Pages/CompanyChat'
 import CompanyFilter from './Pages/CompanyFilter'
+import CompanyDashboard from './Pages/CompanyDashboard'
+import CompanyProfile from './Pages/CompanyProfile'
+import AdminPanel from './Pages/AdminPanel'
+import ProtectedRoute from './Components/ProtectedRoute'
 
 const App = () => {
   return (
@@ -26,15 +30,22 @@ const App = () => {
 
           {/* Dev Flow */}
           <Route path='/login' element={<DevLogin />} />
-          <Route path='/dev-profile' element={<DevProfile />} />
-          <Route path='/dev-dashboard' element={<DevDashboard />} />
-          <Route path='/dev-chat' element={<DevChat />} />
+          <Route element={<ProtectedRoute role='developer' />}>
+            <Route path='/dev-profile' element={<DevProfile />} />
+            <Route path='/dev-dashboard' element={<DevDashboard />} />
+            <Route path='/dev-chat' element={<DevChat />} />
+          </Route>
 
           {/* Company Flow */}
           <Route path='/company-login' element={<CompanyLogin />} />
-          <Route path='/hire' element={<HirePage />} />
-          <Route path='/company-chat' element={<CompanyChat />} />
-          <Route path='/company-filter' element={<CompanyFilter />} />
+          <Route element={<ProtectedRoute role='company' />}>
+            <Route path='/hire' element={<HirePage />} />
+            <Route path='/company-dashboard' element={<CompanyDashboard />} />
+            <Route path='/company-profile' element={<CompanyProfile />} />
+            <Route path='/company-chat' element={<CompanyChat />} />
+            <Route path='/company-filter' element={<CompanyFilter />} />
+          </Route>
+          <Route path='/admin' element={<AdminPanel />} />
         </Routes>
         <Footer />
       </div>

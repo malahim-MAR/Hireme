@@ -20,12 +20,12 @@ import {
   UserCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import RateLimiter from '../Components/RateLimiter';
 import './NoteCard.css';
 
 // Status Stage Configuration
-export const STAGES = [
+const STAGES = [
   { id: 'all', label: 'All Applications', key: null },
   { id: 'Applied', label: 'Applied', colorKey: 'applied' },
   { id: 'Interview', label: 'Interviewing', colorKey: 'interview' },
@@ -45,8 +45,6 @@ const NoteCard = () => {
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'company'
   const [expandedCards, setExpandedCards] = useState({}); // { [id]: boolean }
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
-
-  const navigate = useNavigate();
 
   const fetchNotes = async () => {
     try {

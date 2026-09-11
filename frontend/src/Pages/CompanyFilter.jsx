@@ -1,115 +1,121 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, MapPin, MessageSquare, Search } from "lucide-react";
+import { apiRequest, getAuth } from "../api";
 
 const CompanyFilter = () => {
   const [filters, setFilters] = useState({
+    search: "",
     level: "All",
     stack: "All",
     country: "All",
     availability: "All",
   });
+  const [developers, setDevelopers] = useState([]);
+  const [error, setError] = useState("");
+  const account = getAuth();
 
-  // Hardcoded dev pool
-  const allDevs = [
-    { id: 1, name: "Sarthak Thakur", title: "Full Stack Developer", level: "Junior", experience: "2 years", country: "India", city: "Kolkata", skills: ["React", "Node.js", "MongoDB", "Express"], avatar: "👨‍💻", availability: "Immediately" },
-    { id: 2, name: "Emily Chen", title: "Frontend Developer", level: "Mid", experience: "4 years", country: "USA", city: "San Francisco", skills: ["React", "TypeScript", "Next.js", "Tailwind"], avatar: "👩‍💻", availability: "Within 2 weeks" },
-    { id: 3, name: "Arjun Patel", title: "Backend Developer", level: "Senior", experience: "7 years", country: "India", city: "Mumbai", skills: ["Python", "Django", "PostgreSQL", "AWS", "Docker"], avatar: "🧑‍💻", availability: "Within 1 month" },
-    { id: 4, name: "Sofia Martinez", title: "Full Stack Developer", level: "Mid", experience: "3 years", country: "Spain", city: "Barcelona", skills: ["Vue.js", "Node.js", "Firebase", "GraphQL"], avatar: "👩‍💻", availability: "Immediately" },
-    { id: 5, name: "James Okonkwo", title: "DevOps Engineer", level: "Senior", experience: "6 years", country: "Nigeria", city: "Lagos", skills: ["AWS", "Kubernetes", "Terraform", "CI/CD", "Docker"], avatar: "🧑‍💻", availability: "Within 2 weeks" },
-    { id: 6, name: "Anna Kowalski", title: "Mobile Developer", level: "Junior", experience: "1 year", country: "Poland", city: "Warsaw", skills: ["React Native", "JavaScript", "Firebase"], avatar: "👩‍💻", availability: "Immediately" },
-  ];
+  useEffect(() => {
+    apiRequest("/developers")
+      .then(setDevelopers)
+      .catch((requestError) => setError(requestError.message));
+  }, []);
 
-  const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+  const countries = useMemo(() => [...new Set(developers.map((dev) => dev.country))], []);
+  const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], []);
+
+  const updateFilter = (event) => {
+    setFilters({ ...filters, [event.target.name]: event.target.value });
   };
 
   const clearFilters = () => {
-    setFilters({ level: "All", stack: "All", country: "All", availability: "All" });
+    setFilters({ search: "", level: "All", stack: "All", country: "All", availability: "All" });
   };
 
-  // Filter logic
-  const filteredDevs = allDevs.filter((dev) => {
-    if (filters.level !== "All" && dev.level !== filters.level) return false;
-    if (filters.country !== "All" && dev.country !== filters.country) return false;
-    if (filters.availability !== "All" && dev.availability !== filters.availability) return false;
-    if (filters.stack !== "All" && !dev.skills.some((s) => s.toLowerCase().includes(filters.stack.toLowerCase()))) return false;
-    return true;
+  const contactDeveloper = async (developerId) => {
+    try {
+      await apiRequest("/chats", {
+        method: "POST",
+        body: JSON.stringify({ accountId: account?.id, role: "company", developerId }),
+      });
+      window.location.href = "/company-chat";
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
+
+  const filteredDevs = developers.filter((dev) => {
+    const search = filters.search.toLowerCase();
+    const searchable = `${dev.name} ${dev.title} ${dev.city} ${dev.country} ${dev.skills.join(" ")}`.toLowerCase();
+
+    return (
+      (!search || searchable.includes(search)) &&
+      (filters.level === "All" || dev.level === filters.level) &&
+      (filters.country === "All" || dev.country === filters.country) &&
+      (filters.availability === "All" || dev.availability === filters.availability) &&
+      (filters.stack === "All" || dev.skills.includes(filters.stack))
+    );
   });
 
-  // Unique values for dropdowns
-  const countries = [...new Set(allDevs.map((d) => d.country))];
-  const stacks = [...new Set(allDevs.flatMap((d) => d.skills))];
-
   return (
-    <div className="filter-container">
-      <div className="container">
-        <div className="filter-header">
+    <main className="workflow-page">
+      <div className="workflow-shell">
+        <header className="workflow-header">
           <div>
-            <h1 className="filter-title">Find the Right Developer</h1>
-            <p className="filter-subtitle">Filter by experience level, tech stack, country, and availability</p>
+            <span className="eyebrow">Advanced search</span>
+            <h1>Filter developers</h1>
+            <p>Narrow the company feed by experience, tech stack, location, and availability.</p>
           </div>
-          <Link to="/hire" className="btn-outline">← Back to all devs</Link>
-        </div>
-
-        {/* Filter Bar */}
-        <div className="filter-bar card">
-          <div className="filter-group">
-            <label>Experience Level</label>
-            <select name="level" value={filters.level} onChange={handleFilterChange}>
-              <option>All</option>
-              <option>Junior</option>
-              <option>Mid</option>
-              <option>Senior</option>
-            </select>
+          <div className="workflow-actions">
+            <Link to="/hire" className="btn-secondary-action"><ArrowLeft size={16} /> Back to feed</Link>
+            <Link to="/company-chat" className="btn-primary-action"><MessageSquare size={16} /> Chats</Link>
           </div>
+        </header>
 
-          <div className="filter-group">
-            <label>Tech Stack</label>
-            <select name="stack" value={filters.stack} onChange={handleFilterChange}>
-              <option>All</option>
-              {stacks.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Country</label>
-            <select name="country" value={filters.country} onChange={handleFilterChange}>
-              <option>All</option>
-              {countries.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Availability</label>
-            <select name="availability" value={filters.availability} onChange={handleFilterChange}>
-              <option>All</option>
-              <option>Immediately</option>
-              <option>Within 2 weeks</option>
-              <option>Within 1 month</option>
-            </select>
-          </div>
-
-          <button className="btn-outline btn-sm filter-clear-btn" onClick={clearFilters}>
-            Clear Filters
+        <section className="filter-strip filter-strip-wide">
+          <label className="search-field">
+            <Search size={16} />
+            <input
+              name="search"
+              value={filters.search}
+              onChange={updateFilter}
+              placeholder="Search developers"
+            />
+          </label>
+          <select name="level" value={filters.level} onChange={updateFilter}>
+            <option>All</option>
+            <option>Junior</option>
+            <option>Mid</option>
+            <option>Senior</option>
+          </select>
+          <select name="stack" value={filters.stack} onChange={updateFilter}>
+            <option>All</option>
+            {stacks.map((stack) => <option key={stack}>{stack}</option>)}
+          </select>
+          <select name="country" value={filters.country} onChange={updateFilter}>
+            <option>All</option>
+            {countries.map((country) => <option key={country}>{country}</option>)}
+          </select>
+          <select name="availability" value={filters.availability} onChange={updateFilter}>
+            <option>All</option>
+            <option>Immediately</option>
+            <option>Within 2 weeks</option>
+            <option>Within 1 month</option>
+          </select>
+          <button className="btn-secondary-action" type="button" onClick={clearFilters}>
+            Clear
           </button>
-        </div>
+        </section>
 
-        {/* Results Count */}
-        <p className="filter-results-count">
-          Showing <strong>{filteredDevs.length}</strong> of {allDevs.length} developers
-        </p>
+        <p className="result-line">Showing {filteredDevs.length} of {developers.length} developers</p>
+        {error && <div className="error-banner">{error}</div>}
 
-        {/* Results Grid */}
         <div className="hire-grid">
           {filteredDevs.length > 0 ? (
             filteredDevs.map((dev) => (
-              <div className="hire-card card" key={dev.id}>
+              <article className="hire-card" key={dev.id}>
                 <div className="hire-card-top">
-                  <div className="hire-card-avatar">{dev.avatar}</div>
+                  <div className="hire-card-avatar">{dev.initials}</div>
                   <div>
                     <h3 className="hire-card-name">{dev.name}</h3>
                     <p className="hire-card-title">{dev.title}</p>
@@ -117,33 +123,36 @@ const CompanyFilter = () => {
                 </div>
 
                 <div className="hire-card-skills">
-                  {dev.skills.map((skill) => (
-                    <span className="skill-tag" key={skill}>{skill}</span>
-                  ))}
+                  {dev.skills.map((skill) => <span className="skill-tag" key={skill}>{skill}</span>)}
                 </div>
 
                 <div className="hire-card-meta">
-                  <span>📍 {dev.city}, {dev.country}</span>
-                  <span>📊 {dev.level} • {dev.experience}</span>
+                  <span><MapPin size={14} /> {dev.city}, {dev.country}</span>
+                  <span>{dev.level} / {dev.experience}</span>
                   <span className={`hire-avail ${dev.availability === "Immediately" ? "avail-now" : ""}`}>
-                    ⏰ {dev.availability}
+                    {dev.availability}
                   </span>
                 </div>
 
-                <div className="hire-card-actions">
-                  <button className="btn-primary btn-sm">View Profile</button>
-                  <Link to="/company-chat" className="btn-outline btn-sm">Message</Link>
+                <div className="phase-line">
+                  <span>Phase</span>
+                  <strong>{dev.phase}</strong>
                 </div>
-              </div>
+
+                <div className="hire-card-actions">
+                  <button className="btn-secondary-action btn-sm" type="button">View profile</button>
+                  <button type="button" className="btn-primary-action btn-sm" onClick={() => contactDeveloper(dev.id)}>Message</button>
+                </div>
+              </article>
             ))
           ) : (
-            <div className="filter-empty">
-              <p>No developers match your filters. Try adjusting your criteria.</p>
+            <div className="panel empty-panel">
+              <p>No developers match your filters. Try a broader search.</p>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

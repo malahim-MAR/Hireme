@@ -1,6 +1,7 @@
 import express from "express";
 import notesRoutes from "./routes/notesRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import marketplaceRoutes from "./routes/marketplaceRoutes.js";
 import { connectDB } from "./config/db.js";
 import dotenv from "dotenv";
 import rateLimiter from "./middleware/ratelimiter.js";
@@ -18,13 +19,14 @@ app.use(express.json());
 if (process.env.NODE_ENV !== "Production") {
   app.use(
     cors({
-      origin: "http://localhost:5173",
+      origin: [/^http:\/\/localhost:517\d$/],
     })
   );
 }
 // app.use(rateLimiter);
 app.use("/api/notes", notesRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api", marketplaceRoutes);
 
 if (process.env.NODE_ENV == "Production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));

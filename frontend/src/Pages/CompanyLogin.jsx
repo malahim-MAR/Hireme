@@ -1,136 +1,155 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { saveAuth } from "../api";
+
+const initialFormData = {
+  companyName: "",
+  workEmail: "",
+  phoneNumber: "",
+  password: "",
+  startYear: "",
+  totalBranches: "",
+  location: "",
+  employeeCount: "",
+  website: "",
+  industry: "",
+  description: "",
+};
 
 const CompanyLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    companyName: "",
-    workEmail: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
     const endpoint = isLogin ? "/api/auth/company/login" : "/api/auth/company/signup";
+
     try {
       const response = await fetch(`http://localhost:5001${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          startYear: Number(formData.startYear),
+          totalBranches: Number(formData.totalBranches),
+        }),
       });
       const data = await response.json();
-      if (response.ok) {
-        console.log(`${isLogin ? "Company Login" : "Company Signup"} successful:`, data);
-        navigate("/hire");
-      } else {
-        alert(data.message || "Something went wrong");
+
+      if (!response.ok) {
+        setError(data.message || "Something went wrong.");
+        return;
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to connect to server");
+
+      if (!isLogin) {
+        setIsLogin(true);
+        setError("Account created. Please sign in.");
+        return;
+      }
+
+      saveAuth(data.account, "company");
+      navigate("/hire");
+    } catch (err) {
+      setError(err.message || "Failed to connect to server.");
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <main className="auth-page">
+      <section className="auth-card">
         <div className="auth-header">
-          <h1 className="auth-title">
-            {isLogin ? "Hire Talent" : "Scale Faster"}
-          </h1>
-          <p className="auth-subtitle">
+          <span className="eyebrow">Company access</span>
+          <h1>{isLogin ? "Company sign in" : "Create company profile"}</h1>
+          <p>
             {isLogin
-              ? "Access top developers for your projects"
-              : "Register your company to post vacancies"}
+              ? "Sign in to browse developers and manage hiring conversations."
+              : "Create your company profile to get started."}
           </p>
         </div>
 
+        {error && <div className="error-banner">{error}</div>}
+
         <form className="auth-form" onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="form-group">
-              <label className="form-label">Company Name</label>
-              <input
-                type="text"
-                name="companyName"
-                placeholder="Ex: Acme Inc."
-                value={formData.companyName}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <>
+              <label>
+                <span>Company name</span>
+                <input name="companyName" value={formData.companyName} onChange={handleChange} required />
+              </label>
+              <label>
+                <span>Phone number</span>
+                <input name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} required />
+              </label>
+              <label>
+                <span>Start year</span>
+                <input type="number" min="1800" max="2026" name="startYear" value={formData.startYear} onChange={handleChange} required />
+              </label>
+              <label>
+                <span>Total branches</span>
+                <input type="number" min="1" name="totalBranches" value={formData.totalBranches} onChange={handleChange} required />
+              </label>
+              <label>
+                <span>Location</span>
+                <input name="location" value={formData.location} onChange={handleChange} required />
+              </label>
+              <label>
+                <span>People working there</span>
+                <select name="employeeCount" value={formData.employeeCount} onChange={handleChange} required>
+                  <option value="">Select size</option>
+                  <option>1-10</option>
+                  <option>11-50</option>
+                  <option>51-200</option>
+                  <option>201-1000</option>
+                  <option>1000+</option>
+                </select>
+              </label>
+              <label>
+                <span>Website</span>
+                <input name="website" value={formData.website} onChange={handleChange} placeholder="https://company.com" />
+              </label>
+              <label>
+                <span>Industry</span>
+                <input name="industry" value={formData.industry} onChange={handleChange} placeholder="SaaS, fintech, agency..." />
+              </label>
+              <label className="auth-span-2">
+                <span>Company description</span>
+                <textarea name="description" value={formData.description} onChange={handleChange} rows={3} />
+              </label>
+            </>
           )}
 
-          <div className="form-group">
-            <label className="form-label">Work Email</label>
-            <input
-              type="email"
-              name="workEmail"
-              placeholder="hr@company.com"
-              value={formData.workEmail}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          <label>
+            <span>Work email</span>
+            <input type="email" name="workEmail" value={formData.workEmail} onChange={handleChange} required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+          </label>
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {isLogin && (
-            <div className="auth-forgot">
-              <a href="#">Forgot company credentials?</a>
-            </div>
-          )}
-
-          <button type="submit" className="auth-btn">
-            {isLogin ? "Company Sign in" : "Register Company"}
+          <button type="submit" className="btn-primary-action auth-submit">
+            {isLogin ? "Sign in" : "Sign up"}
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
-
         <div className="auth-toggle">
-          {isLogin ? (
-            <p>
-              New here?{" "}
-              <button
-                type="button"
-                className="toggle-btn"
-                onClick={() => setIsLogin(false)}
-              >
-                Register your business
-              </button>
-            </p>
-          ) : (
-            <p>
-              Already registered?{" "}
-              <button
-                type="button"
-                className="toggle-btn"
-                onClick={() => setIsLogin(true)}
-              >
-                Business sign in
-              </button>
-            </p>
-          )}
+          <p>
+            {isLogin ? "Need a company account?" : "Already registered?"}{" "}
+            <button type="button" className="text-button" onClick={() => setIsLogin(!isLogin)}>
+              {isLogin ? "Create one" : "Sign in"}
+            </button>
+          </p>
+          <Link to="/login" className="text-button">Developer access</Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

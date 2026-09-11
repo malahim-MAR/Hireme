@@ -1,108 +1,111 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Filter, MapPin, MessageSquare, Search, SlidersHorizontal } from "lucide-react";
+import { apiRequest, getAuth } from "../api";
 
 const HirePage = () => {
-  // Hardcoded dev profiles
-  const devProfiles = [
-    {
-      id: 1,
-      name: "Sarthak Thakur",
-      title: "Full Stack Developer",
-      level: "Junior",
-      experience: "2 years",
-      country: "India",
-      city: "Kolkata",
-      skills: ["React", "Node.js", "MongoDB", "Express"],
-      bio: "MERN stack developer passionate about building scalable web apps.",
-      avatar: "👨‍💻",
-      availability: "Immediately",
-    },
-    {
-      id: 2,
-      name: "Emily Chen",
-      title: "Frontend Developer",
-      level: "Mid",
-      experience: "4 years",
-      country: "USA",
-      city: "San Francisco",
-      skills: ["React", "TypeScript", "Next.js", "Tailwind"],
-      bio: "UI/UX focused frontend engineer with a passion for pixel-perfect designs.",
-      avatar: "👩‍💻",
-      availability: "Within 2 weeks",
-    },
-    {
-      id: 3,
-      name: "Arjun Patel",
-      title: "Backend Developer",
-      level: "Senior",
-      experience: "7 years",
-      country: "India",
-      city: "Mumbai",
-      skills: ["Python", "Django", "PostgreSQL", "AWS", "Docker"],
-      bio: "Experienced backend architect building high-traffic APIs and microservices.",
-      avatar: "🧑‍💻",
-      availability: "Within 1 month",
-    },
-    {
-      id: 4,
-      name: "Sofia Martinez",
-      title: "Full Stack Developer",
-      level: "Mid",
-      experience: "3 years",
-      country: "Spain",
-      city: "Barcelona",
-      skills: ["Vue.js", "Node.js", "Firebase", "GraphQL"],
-      bio: "Creative developer blending design thinking with clean code.",
-      avatar: "👩‍💻",
-      availability: "Immediately",
-    },
-    {
-      id: 5,
-      name: "James Okonkwo",
-      title: "DevOps Engineer",
-      level: "Senior",
-      experience: "6 years",
-      country: "Nigeria",
-      city: "Lagos",
-      skills: ["AWS", "Kubernetes", "Terraform", "CI/CD", "Docker"],
-      bio: "Infrastructure specialist focused on cloud-native deployments and automation.",
-      avatar: "🧑‍💻",
-      availability: "Within 2 weeks",
-    },
-    {
-      id: 6,
-      name: "Anna Kowalski",
-      title: "Mobile Developer",
-      level: "Junior",
-      experience: "1 year",
-      country: "Poland",
-      city: "Warsaw",
-      skills: ["React Native", "JavaScript", "Firebase"],
-      bio: "Eager mobile developer building cross-platform apps with React Native.",
-      avatar: "👩‍💻",
-      availability: "Immediately",
-    },
-  ];
+  const [filters, setFilters] = useState({
+    search: "",
+    level: "All",
+    availability: "All",
+    stack: "All",
+  });
+  const [developers, setDevelopers] = useState([]);
+  const [error, setError] = useState("");
+  const account = getAuth();
+
+  useEffect(() => {
+    apiRequest("/developers")
+      .then(setDevelopers)
+      .catch((requestError) => setError(requestError.message));
+  }, []);
+
+  const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], []);
+
+  const filteredDevelopers = developers.filter((dev) => {
+    const search = filters.search.toLowerCase();
+    const searchable = `${dev.name} ${dev.title} ${dev.city} ${dev.country} ${dev.skills.join(" ")}`.toLowerCase();
+
+    return (
+      (!search || searchable.includes(search)) &&
+      (filters.level === "All" || dev.level === filters.level) &&
+      (filters.availability === "All" || dev.availability === filters.availability) &&
+      (filters.stack === "All" || dev.skills.includes(filters.stack))
+    );
+  });
+
+  const updateFilter = (event) => {
+    setFilters({ ...filters, [event.target.name]: event.target.value });
+  };
+
+  const contactDeveloper = async (developerId) => {
+    try {
+      await apiRequest("/chats", {
+        method: "POST",
+        body: JSON.stringify({ accountId: account?.id, role: "company", developerId }),
+      });
+      window.location.href = "/company-chat";
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
 
   return (
-    <div className="hire-container">
-      <div className="container">
-        <div className="hire-header">
+    <main className="workflow-page">
+      <div className="workflow-shell">
+        <header className="workflow-header">
           <div>
-            <h1 className="hire-title">Hire Developers</h1>
-            <p className="hire-subtitle">Browse talented developers ready to join your team</p>
+            <span className="eyebrow">Company feed</span>
+            <h1>Browse developer profiles</h1>
+            <p>Review talent cards, apply a brief filter, and start conversations from the feed.</p>
           </div>
-          <div className="hire-nav-links">
-            <Link to="/company-filter" className="btn-primary">🔍 Filter Developers</Link>
-            <Link to="/company-chat" className="btn-outline">💬 Messages</Link>
+          <div className="workflow-actions">
+            <Link to="/company-dashboard" className="btn-secondary-action">Dashboard</Link>
+            <Link to="/company-chat" className="btn-primary-action"><MessageSquare size={16} /> Messages</Link>
           </div>
+        </header>
+
+        <section className="filter-strip">
+          <label className="search-field">
+            <Search size={16} />
+            <input
+              name="search"
+              value={filters.search}
+              onChange={updateFilter}
+              placeholder="Search name, role, country, or skill"
+            />
+          </label>
+          <select name="level" value={filters.level} onChange={updateFilter}>
+            <option>All</option>
+            <option>Junior</option>
+            <option>Mid</option>
+            <option>Senior</option>
+          </select>
+          <select name="stack" value={filters.stack} onChange={updateFilter}>
+            <option>All</option>
+            {stacks.map((stack) => <option key={stack}>{stack}</option>)}
+          </select>
+          <select name="availability" value={filters.availability} onChange={updateFilter}>
+            <option>All</option>
+            <option>Immediately</option>
+            <option>Within 2 weeks</option>
+            <option>Within 1 month</option>
+          </select>
+          <Link to="/company-filter" className="btn-secondary-action"><SlidersHorizontal size={16} /> More filters</Link>
+        </section>
+
+        <div className="result-line">
+          <Filter size={16} />
+          <span>{filteredDevelopers.length} of {developers.length} developers shown</span>
         </div>
 
+        {error && <div className="error-banner">{error}</div>}
+
         <div className="hire-grid">
-          {devProfiles.map((dev) => (
-            <div className="hire-card card" key={dev.id}>
+          {filteredDevelopers.map((dev) => (
+            <article className="hire-card" key={dev.id}>
               <div className="hire-card-top">
-                <div className="hire-card-avatar">{dev.avatar}</div>
+                <div className="hire-card-avatar">{dev.initials}</div>
                 <div>
                   <h3 className="hire-card-name">{dev.name}</h3>
                   <p className="hire-card-title">{dev.title}</p>
@@ -118,22 +121,27 @@ const HirePage = () => {
               </div>
 
               <div className="hire-card-meta">
-                <span>📍 {dev.city}, {dev.country}</span>
-                <span>📊 {dev.level} • {dev.experience}</span>
+                <span><MapPin size={14} /> {dev.city}, {dev.country}</span>
+                <span>{dev.level} / {dev.experience}</span>
                 <span className={`hire-avail ${dev.availability === "Immediately" ? "avail-now" : ""}`}>
-                  ⏰ {dev.availability}
+                  {dev.availability}
                 </span>
               </div>
 
-              <div className="hire-card-actions">
-                <button className="btn-primary btn-sm">View Profile</button>
-                <Link to="/company-chat" className="btn-outline btn-sm">Message</Link>
+              <div className="phase-line">
+                <span>Current phase</span>
+                <strong>{dev.availability || "Profile available"}</strong>
               </div>
-            </div>
+
+              <div className="hire-card-actions">
+                <button className="btn-secondary-action btn-sm" type="button">View profile</button>
+                <button type="button" className="btn-primary-action btn-sm" onClick={() => contactDeveloper(dev.id)}>Contact</button>
+              </div>
+            </article>
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

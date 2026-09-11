@@ -99,7 +99,7 @@
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   color: var(--text-primary);
 }
 
@@ -187,9 +187,17 @@
   transform: translateY(0);
 }
 
+.tb-message-link {
+  border: 1px solid var(--border-subtle);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .tb-nav-links {
+    display: none;
+  }
+
+  .tb-message-link span {
     display: none;
   }
 }

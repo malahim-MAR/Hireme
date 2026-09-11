@@ -1,121 +1,108 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, Send } from "lucide-react";
+import { apiRequest, getAuth } from "../api";
 
 const CompanyChat = () => {
+  const account = getAuth();
   const [activeChat, setActiveChat] = useState(0);
   const [messageInput, setMessageInput] = useState("");
+  const [conversations, setConversations] = useState([]);
+  const [error, setError] = useState("");
 
-  // Hardcoded conversations with developers
-  const [conversations, setConversations] = useState([
-    {
-      id: 0,
-      devName: "Sarthak Thakur",
-      devAvatar: "👨‍💻",
-      devTitle: "Full Stack Developer",
-      lastMessage: "I'd love to learn more about the role.",
-      time: "2m ago",
-      unread: 1,
-      messages: [
-        { from: "company", text: "Hi Sarthak! We saw your profile and are impressed.", time: "10:30 AM" },
-        { from: "company", text: "We have a Full Stack position open. Interested?", time: "10:31 AM" },
-        { from: "dev", text: "Hi! Thank you for reaching out. I'd love to learn more about the role.", time: "10:45 AM" },
-      ],
-    },
-    {
-      id: 1,
-      devName: "Emily Chen",
-      devAvatar: "👩‍💻",
-      devTitle: "Frontend Developer",
-      lastMessage: "Yes, I'm available for an interview next week.",
-      time: "30m ago",
-      unread: 0,
-      messages: [
-        { from: "company", text: "Hello Emily! We're looking for a React specialist.", time: "9:00 AM" },
-        { from: "dev", text: "Sounds interesting! I have 4 years of React experience.", time: "9:10 AM" },
-        { from: "company", text: "Great! Would you be open to a quick call this week?", time: "9:15 AM" },
-        { from: "dev", text: "Yes, I'm available for an interview next week.", time: "9:20 AM" },
-      ],
-    },
-    {
-      id: 2,
-      devName: "Arjun Patel",
-      devAvatar: "🧑‍💻",
-      devTitle: "Backend Developer",
-      lastMessage: "I can start within a month.",
-      time: "2h ago",
-      unread: 0,
-      messages: [
-        { from: "company", text: "Hi Arjun, we need a senior backend engineer for our API team.", time: "7:00 AM" },
-        { from: "dev", text: "That sounds like a great fit. What's the tech stack?", time: "7:30 AM" },
-        { from: "company", text: "Python, Django, PostgreSQL with AWS infrastructure.", time: "7:35 AM" },
-        { from: "dev", text: "I can start within a month.", time: "8:00 AM" },
-      ],
-    },
-  ]);
+  useEffect(() => {
+    if (!account?.id) return;
+    apiRequest(`/chats?accountId=${account.id}&role=company`)
+      .then(setConversations)
+      .catch((requestError) => setError(requestError.message));
+  }, [account?.id]);
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
+  const pipelineStages = useMemo(() => [...new Set(conversations.map((conversation) => conversation.phase).filter(Boolean))], [conversations]);
+
+  const handleSendMessage = async (event) => {
+    event.preventDefault();
     if (!messageInput.trim()) return;
 
-    const updated = [...conversations];
-    updated[activeChat].messages.push({
-      from: "company",
-      text: messageInput,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    });
-    updated[activeChat].lastMessage = messageInput;
-    updated[activeChat].time = "Just now";
-    setConversations(updated);
-    setMessageInput("");
+    try {
+      const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ accountId: account.id, role: "company", text: messageInput }),
+      });
+      setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
+      setMessageInput("");
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
+  const updatePhase = async (event) => {
+    try {
+      const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/phase`, {
+        method: "PATCH",
+        body: JSON.stringify({ accountId: account.id, role: "company", phase: event.target.value }),
+      });
+      setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
+
+  const activeConversation = conversations[activeChat];
+
   return (
-    <div className="chat-container">
+    <main className="chat-container">
       <div className="chat-layout">
-        {/* Sidebar: Conversations List */}
         <aside className="chat-sidebar">
           <div className="chat-sidebar-header">
-            <h3>Candidates</h3>
-            <Link to="/hire" className="chat-back-link">← Browse</Link>
+            <div>
+              <h3>Candidates</h3>
+              <span>{conversations.length} active conversations</span>
+            </div>
+            <Link to="/hire" className="chat-back-link"><ArrowLeft size={15} /> Browse</Link>
           </div>
           <div className="chat-list">
-            {conversations.map((conv, idx) => (
-              <div
-                key={conv.id}
-                className={`chat-list-item ${activeChat === idx ? "active" : ""}`}
-                onClick={() => setActiveChat(idx)}
+            {conversations.map((conversation, index) => (
+              <button
+                type="button"
+                key={conversation.id}
+                className={`chat-list-item ${activeChat === index ? "active" : ""}`}
+                onClick={() => setActiveChat(index)}
               >
-                <div className="chat-list-avatar">{conv.devAvatar}</div>
+                <div className="chat-list-avatar">{conversation.devInitials}</div>
                 <div className="chat-list-info">
                   <div className="chat-list-top">
-                    <span className="chat-list-name">{conv.devName}</span>
-                    <span className="chat-list-time">{conv.time}</span>
+                    <span className="chat-list-name">{conversation.devName}</span>
+                    <span className="chat-list-time">{conversation.time}</span>
                   </div>
-                  <p className="chat-list-preview">{conv.lastMessage}</p>
+                  <p className="chat-list-preview">{conversation.lastMessage}</p>
+                  <span className="phase-pill">{conversation.phase}</span>
                 </div>
-                {conv.unread > 0 && <span className="chat-unread-badge">{conv.unread}</span>}
-              </div>
+                {conversation.unread > 0 && <span className="chat-unread-badge">{conversation.unread}</span>}
+              </button>
             ))}
           </div>
         </aside>
 
-        {/* Main Chat Area */}
-        <main className="chat-main">
+        {activeConversation ? <section className="chat-main">
           <div className="chat-main-header">
-            <div className="chat-main-avatar">
-              {conversations[activeChat].devAvatar}
-            </div>
+            <div className="chat-main-avatar">{activeConversation.devInitials}</div>
             <div>
-              <h4>{conversations[activeChat].devName}</h4>
-              <span className="chat-status">{conversations[activeChat].devTitle}</span>
+              <h4>{activeConversation.devName}</h4>
+              <span className="chat-status">{activeConversation.devTitle}</span>
             </div>
+            <label className="phase-select">
+              <span>Phase</span>
+              <select value={activeConversation.phase} onChange={updatePhase}>
+                {pipelineStages.map((stage) => <option key={stage}>{stage}</option>)}
+              </select>
+            </label>
           </div>
 
           <div className="chat-messages">
-            {conversations[activeChat].messages.map((msg, i) => (
-              <div key={i} className={`chat-bubble ${msg.from === "company" ? "chat-bubble-sent" : "chat-bubble-received"}`}>
-                <p>{msg.text}</p>
-                <span className="chat-bubble-time">{msg.time}</span>
+            {activeConversation.messages.map((message, index) => (
+              <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "company" ? "chat-bubble-sent" : "chat-bubble-received"}`}>
+                <p>{message.text}</p>
+                <span className="chat-bubble-time">{message.time}</span>
               </div>
             ))}
           </div>
@@ -125,14 +112,15 @@ const CompanyChat = () => {
               type="text"
               placeholder="Write a message..."
               value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
+              onChange={(event) => setMessageInput(event.target.value)}
               className="chat-input"
             />
-            <button type="submit" className="chat-send-btn">Send</button>
+            <button type="submit" className="chat-send-btn"><Send size={16} /> Send</button>
           </form>
-        </main>
+        </section> : <section className="chat-main"><div className="empty-panel"><p>No conversations found in the database.</p></div></section>}
       </div>
-    </div>
+      {error && <div className="error-banner">{error}</div>}
+    </main>
   );
 };
 
