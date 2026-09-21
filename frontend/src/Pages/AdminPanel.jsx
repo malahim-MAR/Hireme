@@ -53,32 +53,58 @@ const AdminPanel = () => {
     }
   };
 
-  const renderAccount = (account, role) => (
-    <article className="admin-account-card" key={account.id}>
-      <div>
-        <span className="phase-pill">{statusLabels[account.verificationStatus]}</span>
-        <h3>{role === "company" ? account.companyName : account.name}</h3>
-        <p>{role === "company" ? account.workEmail : account.email}</p>
-      </div>
-      <textarea
-        value={notes[account.id] || account.adminNotes || ""}
-        onChange={(event) => setNotes({ ...notes, [account.id]: event.target.value })}
-        placeholder="Notes for missing details or verification email"
-        rows={3}
-      />
-      <div className="admin-actions">
-        <button type="button" className="btn-primary-action" onClick={() => reviewAccount(role, account.id, "verified")}>
-          <CheckCircle2 size={16} /> Verify
-        </button>
-        <button type="button" className="btn-secondary-action" onClick={() => reviewAccount(role, account.id, "needs_info")}>
-          <Clock size={16} /> Needs info
-        </button>
-        <button type="button" className="danger-button" onClick={() => reviewAccount(role, account.id, "rejected")}>
-          <XCircle size={16} /> Reject
-        </button>
-      </div>
-    </article>
-  );
+  const renderAccount = (account, role) => {
+    const detailItems = role === "company"
+      ? [
+        ["Phone", account.phoneNumber],
+        ["Location", account.location],
+        ["Industry", account.industry],
+        ["Team size", account.employeeCount],
+        ["Website", account.website],
+        ["About", account.description],
+      ]
+      : [
+        ["Phone", account.phoneNumber],
+        ["Location", account.location],
+        ["Current company", account.currentCompany],
+        ["Experience", `${account.yearsOfExperience ?? 0} years`],
+        ["LinkedIn", account.linkedinProfile],
+        ["Portfolio", account.portfolio],
+        ["Skills", account.primarySkills],
+      ];
+
+    return (
+      <article className="admin-account-card" key={account.id}>
+        <div>
+          <span className="phase-pill">{statusLabels[account.verificationStatus]}</span>
+          <h3>{role === "company" ? account.companyName : account.name}</h3>
+          <p>{role === "company" ? account.workEmail : account.email}</p>
+        </div>
+        <div className="admin-detail-grid">
+          {detailItems.filter(([, value]) => value).map(([label, value]) => (
+            <p key={label}><strong>{label}</strong><span>{value}</span></p>
+          ))}
+        </div>
+        <textarea
+          value={notes[account.id] || account.adminNotes || ""}
+          onChange={(event) => setNotes({ ...notes, [account.id]: event.target.value })}
+          placeholder="Notes for missing details or verification email"
+          rows={3}
+        />
+        <div className="admin-actions">
+          <button type="button" className="btn-primary-action" onClick={() => reviewAccount(role, account.id, "verified")}>
+            <CheckCircle2 size={16} /> Verify
+          </button>
+          <button type="button" className="btn-secondary-action" onClick={() => reviewAccount(role, account.id, "needs_info")}>
+            <Clock size={16} /> Needs info
+          </button>
+          <button type="button" className="danger-button" onClick={() => reviewAccount(role, account.id, "rejected")}>
+            <XCircle size={16} /> Reject
+          </button>
+        </div>
+      </article>
+    );
+  };
 
   return (
     <main className="workflow-page">

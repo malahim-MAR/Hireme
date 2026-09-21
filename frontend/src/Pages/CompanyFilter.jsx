@@ -21,8 +21,8 @@ const CompanyFilter = () => {
       .catch((requestError) => setError(requestError.message));
   }, []);
 
-  const countries = useMemo(() => [...new Set(developers.map((dev) => dev.country))], []);
-  const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], []);
+  const countries = useMemo(() => [...new Set(developers.map((dev) => dev.country).filter(Boolean))], [developers]);
+  const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], [developers]);
 
   const updateFilter = (event) => {
     setFilters({ ...filters, [event.target.name]: event.target.value });
@@ -136,7 +136,7 @@ const CompanyFilter = () => {
 
                 <div className="phase-line">
                   <span>Phase</span>
-                  <strong>{dev.phase}</strong>
+                  <strong>{dev.availability || "Profile available"}</strong>
                 </div>
 
                 <div className="hire-card-actions">

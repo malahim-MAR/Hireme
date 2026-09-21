@@ -3,6 +3,13 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Send } from "lucide-react";
 import { apiRequest, getAuth } from "../api";
 
+const phaseOptions = ["Intro", "Screening", "Technical Interview", "Final Interview", "Offer", "Negotiation", "Hired", "Rejected"];
+
+const formatChatTime = (value) => {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+};
+
 const CompanyChat = () => {
   const account = getAuth();
   const [activeChat, setActiveChat] = useState(0);
@@ -17,11 +24,15 @@ const CompanyChat = () => {
       .catch((requestError) => setError(requestError.message));
   }, [account?.id]);
 
-  const pipelineStages = useMemo(() => [...new Set(conversations.map((conversation) => conversation.phase).filter(Boolean))], [conversations]);
+  useEffect(() => {
+    if (activeChat >= conversations.length) setActiveChat(0);
+  }, [activeChat, conversations.length]);
+
+  const pipelineStages = useMemo(() => [...new Set([...phaseOptions, ...conversations.map((conversation) => conversation.phase).filter(Boolean)])], [conversations]);
 
   const handleSendMessage = async (event) => {
     event.preventDefault();
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() || !conversations[activeChat]) return;
 
     try {
       const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/messages`, {
@@ -30,6 +41,7 @@ const CompanyChat = () => {
       });
       setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
       setMessageInput("");
+      setError("");
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -42,6 +54,7 @@ const CompanyChat = () => {
         body: JSON.stringify({ accountId: account.id, role: "company", phase: event.target.value }),
       });
       setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
+      setError("");
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -72,7 +85,7 @@ const CompanyChat = () => {
                 <div className="chat-list-info">
                   <div className="chat-list-top">
                     <span className="chat-list-name">{conversation.devName}</span>
-                    <span className="chat-list-time">{conversation.time}</span>
+                    <span className="chat-list-time">{formatChatTime(conversation.time)}</span>
                   </div>
                   <p className="chat-list-preview">{conversation.lastMessage}</p>
                   <span className="phase-pill">{conversation.phase}</span>
@@ -88,7 +101,7 @@ const CompanyChat = () => {
             <div className="chat-main-avatar">{activeConversation.devInitials}</div>
             <div>
               <h4>{activeConversation.devName}</h4>
-              <span className="chat-status">{activeConversation.devTitle}</span>
+                <span className="chat-status">{activeConversation.devTitle || "Developer"}</span>
             </div>
             <label className="phase-select">
               <span>Phase</span>
@@ -102,7 +115,7 @@ const CompanyChat = () => {
             {activeConversation.messages.map((message, index) => (
               <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "company" ? "chat-bubble-sent" : "chat-bubble-received"}`}>
                 <p>{message.text}</p>
-                <span className="chat-bubble-time">{message.time}</span>
+                <span className="chat-bubble-time">{formatChatTime(message.time)}</span>
               </div>
             ))}
           </div>
@@ -115,9 +128,9 @@ const CompanyChat = () => {
               onChange={(event) => setMessageInput(event.target.value)}
               className="chat-input"
             />
-            <button type="submit" className="chat-send-btn"><Send size={16} /> Send</button>
+            <button type="submit" className="chat-send-btn" disabled={!messageInput.trim()}><Send size={16} /> Send</button>
           </form>
-        </section> : <section className="chat-main"><div className="empty-panel"><p>No conversations found in the database.</p></div></section>}
+        </section> : <section className="chat-main chat-empty-state"><div className="empty-panel"><p>No conversations yet. Contact a developer from the browse page to start one.</p></div></section>}
       </div>
       {error && <div className="error-banner">{error}</div>}
     </main>

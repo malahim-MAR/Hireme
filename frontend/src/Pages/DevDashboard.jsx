@@ -89,7 +89,7 @@ const DevDashboard = () => {
                   <div className="stage-row" key={stage}>
                     <span>{stage}</span>
                     <div className="stage-meter" aria-hidden="true">
-                      <span style={{ width: `${(count / activeCompanies) * 100}%` }} />
+                      <span style={{ width: `${activeCompanies ? (count / activeCompanies) * 100 : 0}%` }} />
                     </div>
                     <strong>{count}</strong>
                   </div>

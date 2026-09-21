@@ -44,7 +44,7 @@ const publicCompany = (company, profile = {}) => ({
 });
 
 const loadDevelopers = async () => {
-  const developers = await Developer.find({ verificationStatus: { $ne: "rejected" } }).sort({ createdAt: -1 });
+  const developers = await Developer.find({ verificationStatus: "verified" }).sort({ createdAt: -1 });
   const profiles = await Promise.all(developers.map((developer) => DevProfile.findOneAndUpdate(
     { developer: developer._id },
     {
@@ -187,6 +187,9 @@ export const createChat = async (req, res) => {
     const developer = await Developer.findById(developerId);
     const company = await Company.findById(accountId);
     if (!developer || !company) return res.status(404).json({ message: "Account not found." });
+    if (developer.verificationStatus !== "verified" || company.verificationStatus !== "verified") {
+      return res.status(403).json({ message: "Both accounts must be admin verified before chatting." });
+    }
 
     let chat = await Chat.findOne({
       $or: [

@@ -17,6 +17,7 @@ import CompanyDashboard from './Pages/CompanyDashboard'
 import CompanyProfile from './Pages/CompanyProfile'
 import AdminPanel from './Pages/AdminPanel'
 import ProtectedRoute from './Components/ProtectedRoute'
+import WaitingReview from './Pages/WaitingReview'
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
 
           {/* Company Flow */}
           <Route path='/company-login' element={<CompanyLogin />} />
+          <Route path='/waiting-review' element={<WaitingReview />} />
           <Route element={<ProtectedRoute role='company' />}>
             <Route path='/hire' element={<HirePage />} />
             <Route path='/company-dashboard' element={<CompanyDashboard />} />

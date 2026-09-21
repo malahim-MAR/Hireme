@@ -30,7 +30,7 @@ const CompanyDashboard = () => {
       replyRate: Math.round((replied.length / Math.max(contacted.length, 1)) * 100),
       activeChats: conversations.length,
     };
-  }, [developers, conversations]);
+  }, [conversations]);
 
   const pipelineStages = [...new Set(conversations.map((conversation) => conversation.phase).filter(Boolean))];
   const chatByDeveloper = new Map(conversations.map((conversation) => [String(conversation.developerId), conversation]));
@@ -91,7 +91,7 @@ const CompanyDashboard = () => {
                 <div className="stage-row" key={stage}>
                   <span>{stage}</span>
                   <div className="stage-meter" aria-hidden="true">
-                    <span style={{ width: `${(count / developers.length) * 100}%` }} />
+                    <span style={{ width: `${developers.length ? (count / developers.length) * 100 : 0}%` }} />
                   </div>
                   <strong>{count}</strong>
                 </div>

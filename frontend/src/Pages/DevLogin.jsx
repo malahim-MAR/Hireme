@@ -48,12 +48,14 @@ const DevLogin = () => {
 
       if (!isLogin) {
         setIsLogin(true);
-        setError("Account created. Please sign in.");
+        setError("Account created. Please sign in. Admin review starts after login.");
         return;
       }
 
       saveAuth(data.account, "developer");
-      navigate("/dev-dashboard");
+      navigate(data.account.verificationStatus === "verified" ? "/dev-dashboard" : "/waiting-review", {
+        state: { account: { ...data.account, role: "developer" } },
+      });
     } catch (err) {
       setError(err.message || "Failed to connect to server.");
     }

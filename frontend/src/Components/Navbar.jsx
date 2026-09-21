@@ -9,6 +9,7 @@ const Navbar = () => {
   const account = getAuth();
   const isDeveloper = account?.role === 'developer';
   const isCompany = account?.role === 'company';
+  const isVerified = account?.verificationStatus === 'verified';
 
   return (
     <header className="tb-navbar">
@@ -32,7 +33,7 @@ const Navbar = () => {
         <nav className="tb-nav-links" aria-label="Main Navigation">
           <Link to="/" className={`tb-nav-item ${location.pathname === '/' ? 'active' : ''}`}>
             <LayoutGrid size={16} />
-            <span>Pipeline Board</span>
+              <span>Start</span>
           </Link>
           {isCompany && (
             <Link
@@ -56,16 +57,16 @@ const Navbar = () => {
 
         {/* Actions / Primary CTA */}
         <div className="tb-navbar-actions">
-          {account && (
+          {account && isVerified && (
             <Link to={isCompany ? "/company-chat" : "/dev-chat"} className="tb-nav-item tb-message-link">
               <MessageSquare size={16} />
               <span>Chats</span>
             </Link>
           )}
           {!account && (
-            <Link to="/create" className="tb-create-btn" id="nav-create-application-btn">
+            <Link to="/" className="tb-create-btn" id="nav-create-application-btn">
               <PlusCircle size={17} className="tb-create-btn-icon" />
-              <span className="tb-create-btn-text">Log Application</span>
+              <span className="tb-create-btn-text">Get started</span>
             </Link>
           )}
         </div>

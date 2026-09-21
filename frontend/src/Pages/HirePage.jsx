@@ -20,7 +20,7 @@ const HirePage = () => {
       .catch((requestError) => setError(requestError.message));
   }, []);
 
-  const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], []);
+  const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], [developers]);
 
   const filteredDevelopers = developers.filter((dev) => {
     const search = filters.search.toLowerCase();

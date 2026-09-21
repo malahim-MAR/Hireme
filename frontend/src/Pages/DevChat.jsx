@@ -3,6 +3,11 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Send } from "lucide-react";
 import { apiRequest, getAuth } from "../api";
 
+const formatChatTime = (value) => {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+};
+
 const DevChat = () => {
   const account = getAuth();
   const [activeChat, setActiveChat] = useState(0);
@@ -17,9 +22,13 @@ const DevChat = () => {
       .catch((requestError) => setError(requestError.message));
   }, [account?.id]);
 
+  useEffect(() => {
+    if (activeChat >= conversations.length) setActiveChat(0);
+  }, [activeChat, conversations.length]);
+
   const handleSendMessage = async (event) => {
     event.preventDefault();
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() || !conversations[activeChat]) return;
 
     try {
       const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/messages`, {
@@ -28,6 +37,7 @@ const DevChat = () => {
       });
       setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
       setMessageInput("");
+      setError("");
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -58,7 +68,7 @@ const DevChat = () => {
                 <div className="chat-list-info">
                   <div className="chat-list-top">
                     <span className="chat-list-name">{conversation.companyName}</span>
-                    <span className="chat-list-time">{conversation.time}</span>
+                    <span className="chat-list-time">{formatChatTime(conversation.time)}</span>
                   </div>
                   <p className="chat-list-preview">{conversation.lastMessage}</p>
                   <span className="phase-pill">{conversation.phase}</span>
@@ -82,7 +92,7 @@ const DevChat = () => {
             {activeConversation.messages.map((message, index) => (
               <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "dev" ? "chat-bubble-sent" : "chat-bubble-received"}`}>
                 <p>{message.text}</p>
-                <span className="chat-bubble-time">{message.time}</span>
+                <span className="chat-bubble-time">{formatChatTime(message.time)}</span>
               </div>
             ))}
           </div>
@@ -95,9 +105,9 @@ const DevChat = () => {
               onChange={(event) => setMessageInput(event.target.value)}
               className="chat-input"
             />
-            <button type="submit" className="chat-send-btn"><Send size={16} /> Send</button>
+            <button type="submit" className="chat-send-btn" disabled={!messageInput.trim()}><Send size={16} /> Send</button>
           </form>
-        </section> : <section className="chat-main"><div className="empty-panel"><p>No conversations found in the database.</p></div></section>}
+        </section> : <section className="chat-main chat-empty-state"><div className="empty-panel"><p>No conversations yet. Companies will appear here after they contact you.</p></div></section>}
       </div>
       {error && <div className="error-banner">{error}</div>}
     </main>

@@ -8,6 +8,12 @@ const publicCompany = (company) => ({
   type: "company",
   companyName: company.companyName,
   workEmail: company.workEmail,
+  phoneNumber: company.phoneNumber,
+  location: company.location,
+  industry: company.industry,
+  website: company.website,
+  employeeCount: company.employeeCount,
+  description: company.description,
   verificationStatus: company.verificationStatus,
   emailVerified: company.emailVerified,
   adminNotes: company.adminNotes,
@@ -18,6 +24,13 @@ const publicDeveloper = (developer) => ({
   type: "developer",
   name: developer.name,
   email: developer.email,
+  currentCompany: developer.currentCompany,
+  yearsOfExperience: developer.yearsOfExperience,
+  linkedinProfile: developer.linkedinProfile,
+  phoneNumber: developer.phoneNumber,
+  location: developer.location,
+  portfolio: developer.portfolio,
+  primarySkills: developer.primarySkills,
   verificationStatus: developer.verificationStatus,
   emailVerified: developer.emailVerified,
   adminNotes: developer.adminNotes,
@@ -30,7 +43,7 @@ const duplicateMessage = (error, fallback) => {
 
 const respondWithSignup = (res, role, account, status = 201) => {
   res.status(status).json({
-    message: "Signup successful. You can now sign in.",
+    message: "Signup successful. Please sign in so admin can review your identity.",
     account: role === "company" ? publicCompany(account) : publicDeveloper(account),
   });
 };
@@ -50,7 +63,7 @@ export const developerSignup = async (req, res) => {
     const developer = await Developer.create({
       ...req.body,
       verificationToken: null,
-      verificationStatus: "verified",
+      verificationStatus: "admin_pending",
       emailVerified: true,
     });
     await DevProfile.create({
@@ -88,7 +101,7 @@ export const companySignup = async (req, res) => {
     const company = await Company.create({
       ...req.body,
       verificationToken: null,
-      verificationStatus: "verified",
+      verificationStatus: "admin_pending",
       emailVerified: true,
     });
     await CompanyProfile.create({

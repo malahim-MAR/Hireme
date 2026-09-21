@@ -14,6 +14,10 @@ const ProtectedRoute = ({ role }) => {
     return <Navigate to={account.role === "company" ? "/company-dashboard" : "/dev-dashboard"} replace />;
   }
 
+  if (account.verificationStatus !== "verified") {
+    return <Navigate to="/waiting-review" replace state={{ account }} />;
+  }
+
   return <Outlet />;
 };
 

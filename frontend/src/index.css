@@ -10,26 +10,26 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Neutrals & Surfaces */
-  --bg-canvas: #f8fafc;
+  --bg-canvas: #f6f7f4;
   --bg-card: #ffffff;
-  --bg-subtle: #f1f5f9;
-  --bg-muted: #e2e8f0;
+  --bg-subtle: #eef3f0;
+  --bg-muted: #dde7e2;
 
-  --border-subtle: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --border-focus: #2563eb;
+  --border-subtle: #dfe8e3;
+  --border-medium: #c6d4ce;
+  --border-focus: #147d6f;
 
   /* Typography Colors */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-primary: #17211f;
+  --text-secondary: #53625d;
+  --text-muted: #899892;
   --text-inverse: #ffffff;
 
   /* Brand Colors */
-  --brand-primary: #2563eb;
-  --brand-primary-hover: #1d4ed8;
-  --brand-primary-subtle: #eff6ff;
-  --brand-primary-border: #bfdbfe;
+  --brand-primary: #147d6f;
+  --brand-primary-hover: #0e675b;
+  --brand-primary-subtle: #e4f4ef;
+  --brand-primary-border: #addbd0;
 
   /* Pipeline Stage Status Palette */
   --stage-applied-text: #0369a1;
@@ -54,9 +54,9 @@
 
   /* Shadows & Elevation */
   --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-  --shadow-hover: 0 12px 24px -6px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
-  --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 1px 3px 0 rgba(23, 33, 31, 0.05), 0 1px 2px -1px rgba(23, 33, 31, 0.05);
+  --shadow-hover: 0 14px 28px -8px rgba(23, 33, 31, 0.14), 0 4px 8px -6px rgba(23, 33, 31, 0.08);
+  --shadow-lg: 0 22px 34px -12px rgba(23, 33, 31, 0.18), 0 8px 12px -8px rgba(23, 33, 31, 0.08);
 
   /* Radii */
   --radius-sm: 6px;
@@ -195,15 +195,139 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   border-color: var(--border-medium);
 }
 
+.btn-primary-action:disabled,
+.chat-send-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
 .btn-sm {
   min-height: 34px;
   padding: 7px 12px;
   font-size: 13px;
 }
 
+.start-page {
+  min-height: calc(100vh - 64px);
+  background:
+    linear-gradient(135deg, rgba(20, 125, 111, 0.12), transparent 36%),
+    linear-gradient(315deg, rgba(213, 137, 54, 0.14), transparent 34%),
+    var(--bg-canvas);
+  padding: 54px 18px 64px;
+}
+
+.start-hero {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.start-copy {
+  max-width: 760px;
+}
+
+.start-copy h1 {
+  font-size: clamp(40px, 7vw, 74px);
+  line-height: 0.98;
+  margin: 10px 0 14px;
+}
+
+.start-copy p {
+  max-width: 680px;
+  color: var(--text-secondary);
+  font-size: 17px;
+}
+
+.role-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.role-choice-card {
+  display: grid;
+  gap: 12px;
+  min-height: 280px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.role-choice-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-medium);
+}
+
+.role-choice-card strong {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1;
+}
+
+.role-choice-card p {
+  max-width: 420px;
+  color: var(--text-secondary);
+}
+
+.role-icon {
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-subtle);
+  color: var(--brand-primary);
+  border: 1px solid var(--brand-primary-border);
+}
+
+.developer-card .role-icon {
+  background: #fff3df;
+  color: #a45c11;
+  border-color: #f2c98f;
+}
+
+.role-kicker {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.role-action,
+.start-review-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-primary);
+  font-weight: 800;
+}
+
+.start-review-strip {
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-card);
+}
+
 .workflow-page {
   min-height: calc(100vh - 64px);
-  background: var(--bg-canvas);
+  background:
+    linear-gradient(180deg, rgba(20, 125, 111, 0.07), transparent 220px),
+    var(--bg-canvas);
   padding: 34px 0 48px;
 }
 
@@ -321,6 +445,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   flex-direction: column;
   gap: 14px;
   padding: 18px;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.hire-card:hover,
+.metric-card:hover,
+.panel:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-hover);
+}
+
+.hire-card:hover {
+  transform: translateY(-2px);
 }
 
 .hire-card-top,
@@ -588,7 +724,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .chat-container {
   min-height: calc(100vh - 64px);
-  background: var(--bg-canvas);
+  background:
+    linear-gradient(135deg, rgba(20, 125, 111, 0.1), transparent 35%),
+    linear-gradient(315deg, rgba(213, 137, 54, 0.1), transparent 34%),
+    var(--bg-canvas);
   padding: 24px;
 }
 
@@ -655,10 +794,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   padding: 14px 16px;
   text-align: left;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .chat-list-item.active {
   background: var(--brand-primary-subtle);
+}
+
+.chat-list-item:hover {
+  background: var(--bg-subtle);
 }
 
 .chat-list-avatar,
@@ -739,7 +883,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: 10px;
   padding: 18px;
   overflow-y: auto;
-  background: var(--bg-subtle);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent 160px),
+    var(--bg-subtle);
 }
 
 .chat-bubble {
@@ -801,6 +947,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .chat-send-btn {
   background: var(--brand-primary);
   color: #fff;
+}
+
+.chat-empty-state {
+  place-items: center;
+  padding: 24px;
+  color: var(--text-secondary);
 }
 
 .profile-layout {
@@ -905,13 +1057,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  background: var(--bg-canvas);
+  background:
+    linear-gradient(135deg, rgba(20, 125, 111, 0.11), transparent 32%),
+    linear-gradient(315deg, rgba(213, 137, 54, 0.12), transparent 36%),
+    var(--bg-canvas);
   padding: 38px 16px 56px;
 }
 
 .auth-card {
   width: min(780px, 100%);
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
@@ -1044,6 +1199,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   text-align: left;
 }
 
+.review-note strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
 .error-banner {
   background: #fff1f2;
   color: var(--stage-rejected-text);
@@ -1078,6 +1239,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .admin-account-card p {
   color: var(--text-secondary);
   overflow-wrap: anywhere;
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+}
+
+.admin-detail-grid p {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.admin-detail-grid strong {
+  color: var(--text-primary);
+}
+
+.admin-detail-grid span {
+  color: var(--text-secondary);
 }
 
 .admin-actions {
@@ -1126,9 +1310,30 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     max-height: 360px;
     overflow-y: auto;
   }
+
+  .role-choice-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
+  .start-page {
+    padding: 34px 12px 44px;
+  }
+
+  .start-copy h1 {
+    font-size: 40px;
+  }
+
+  .role-choice-card {
+    min-height: 230px;
+    padding: 18px;
+  }
+
+  .start-review-strip {
+    align-items: flex-start;
+  }
+
   .workflow-page,
   .chat-container {
     padding: 18px 12px 32px;
@@ -1142,6 +1347,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .filter-strip-wide,
   .hire-grid,
   .metric-grid,
+  .admin-detail-grid,
   .profile-form-grid {
     grid-template-columns: 1fr;
   }

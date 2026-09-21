@@ -50,12 +50,14 @@ const CompanyLogin = () => {
 
       if (!isLogin) {
         setIsLogin(true);
-        setError("Account created. Please sign in.");
+        setError("Account created. Please sign in. Admin review starts after login.");
         return;
       }
 
       saveAuth(data.account, "company");
-      navigate("/hire");
+      navigate(data.account.verificationStatus === "verified" ? "/hire" : "/waiting-review", {
+        state: { account: { ...data.account, role: "company" } },
+      });
     } catch (err) {
       setError(err.message || "Failed to connect to server.");
     }
