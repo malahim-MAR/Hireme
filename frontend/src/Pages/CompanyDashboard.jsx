@@ -13,7 +13,7 @@ const CompanyDashboard = () => {
     if (!account?.id) return;
     Promise.all([
       apiRequest("/developers"),
-      apiRequest(`/chats?accountId=${account.id}&role=company`),
+      apiRequest("/chats"),
     ]).then(([developerData, chatData]) => {
       setDevelopers(developerData);
       setConversations(chatData);

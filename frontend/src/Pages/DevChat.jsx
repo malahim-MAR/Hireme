@@ -17,7 +17,7 @@ const DevChat = () => {
 
   useEffect(() => {
     if (!account?.id) return;
-    apiRequest(`/chats?accountId=${account.id}&role=developer`)
+    apiRequest("/chats")
       .then(setConversations)
       .catch((requestError) => setError(requestError.message));
   }, [account?.id]);
@@ -33,7 +33,7 @@ const DevChat = () => {
     try {
       const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/messages`, {
         method: "POST",
-        body: JSON.stringify({ accountId: account.id, role: "developer", text: messageInput }),
+        body: JSON.stringify({ text: messageInput }),
       });
       setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
       setMessageInput("");

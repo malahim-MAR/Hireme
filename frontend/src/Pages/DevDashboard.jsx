@@ -10,7 +10,7 @@ const DevDashboard = () => {
 
   useEffect(() => {
     if (!account?.id) return;
-    apiRequest(`/chats?accountId=${account.id}&role=developer`)
+    apiRequest("/chats")
       .then(setConversations)
       .catch((requestError) => setError(requestError.message));
   }, [account?.id]);

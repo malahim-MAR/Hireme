@@ -3,6 +3,7 @@ import CompanyProfile from "../models/CompanyProfile.js";
 import Chat from "../models/Chat.js";
 import Developer from "../models/Developer.js";
 import DevProfile from "../models/DevProfile.js";
+import Hire from "../models/Hire.js";
 
 const roleModel = (role) => role === "company" ? Company : Developer;
 const modelName = (role) => role === "company" ? "Company" : "Developer";
@@ -74,6 +75,9 @@ export const getDevelopers = async (_req, res) => {
 
 export const getDeveloperProfile = async (req, res) => {
   try {
+    if (req.accountRole === "developer" && String(req.account._id) !== String(req.params.id)) {
+      return res.status(403).json({ message: "You can only access your own developer profile." });
+    }
     const developer = await Developer.findById(req.params.id);
     if (!developer) return res.status(404).json({ message: "Developer not found." });
     const profile = await DevProfile.findOne({ developer: developer._id });
@@ -85,6 +89,9 @@ export const getDeveloperProfile = async (req, res) => {
 
 export const updateDeveloperProfile = async (req, res) => {
   try {
+    if (req.accountRole !== "developer" || String(req.account._id) !== String(req.params.id)) {
+      return res.status(403).json({ message: "You can only update your own developer profile." });
+    }
     const profile = await DevProfile.findOneAndUpdate(
       { developer: req.params.id },
       { $set: req.body },
@@ -100,6 +107,9 @@ export const updateDeveloperProfile = async (req, res) => {
 
 export const getCompanyProfile = async (req, res) => {
   try {
+    if (req.accountRole !== "company" || String(req.account._id) !== String(req.params.id)) {
+      return res.status(403).json({ message: "You can only access your own company profile." });
+    }
     const company = await Company.findById(req.params.id);
     if (!company) return res.status(404).json({ message: "Company not found." });
     const profile = await CompanyProfile.findOneAndUpdate(
@@ -115,6 +125,9 @@ export const getCompanyProfile = async (req, res) => {
 
 export const updateCompanyProfile = async (req, res) => {
   try {
+    if (req.accountRole !== "company" || String(req.account._id) !== String(req.params.id)) {
+      return res.status(403).json({ message: "You can only update your own company profile." });
+    }
     const profile = await CompanyProfile.findOneAndUpdate(
       { company: req.params.id },
       { $set: req.body },
@@ -164,15 +177,15 @@ const publicChat = async (chat, accountId, accountRole) => {
 
 export const getChats = async (req, res) => {
   try {
-    const Model = roleModel(req.query.role);
-    if (!Model || !req.query.accountId) return res.status(400).json({ message: "A valid account is required." });
+    const accountId = req.account._id;
+    const role = req.accountRole;
     const chats = await Chat.find({
       $or: [
-        { from: req.query.accountId, fromModel: modelName(req.query.role) },
-        { to: req.query.accountId, toModel: modelName(req.query.role) },
+        { from: accountId, fromModel: modelName(role) },
+        { to: accountId, toModel: modelName(role) },
       ],
     }).sort({ updatedAt: -1 }).lean();
-    res.status(200).json(await Promise.all(chats.map((chat) => publicChat(chat, req.query.accountId, req.query.role))));
+    res.status(200).json(await Promise.all(chats.map((chat) => publicChat(chat, accountId, role))));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -180,8 +193,10 @@ export const getChats = async (req, res) => {
 
 export const createChat = async (req, res) => {
   try {
-    const { accountId, role, developerId, text = "" } = req.body;
-    if (role !== "company" || !accountId || !developerId) {
+    const { developerId, text = "" } = req.body;
+    const accountId = req.account._id;
+    const role = req.accountRole;
+    if (role !== "company" || !developerId) {
       return res.status(400).json({ message: "A company account and developer are required." });
     }
     const developer = await Developer.findById(developerId);
@@ -210,12 +225,21 @@ export const createChat = async (req, res) => {
 
 export const sendChatMessage = async (req, res) => {
   try {
-    const { accountId, role, text } = req.body;
+    const { text } = req.body;
+    const accountId = req.account._id;
+    const role = req.accountRole;
     const chat = await Chat.findById(req.params.id);
     if (!chat || !accountId || !text?.trim()) return res.status(400).json({ message: "A valid chat and message are required." });
     const senderModel = modelName(role);
     const isParticipant = (String(chat.from) === String(accountId) && chat.fromModel === senderModel) || (String(chat.to) === String(accountId) && chat.toModel === senderModel);
     if (!isParticipant) return res.status(403).json({ message: "You are not a participant in this chat." });
+    const [company, developer] = await Promise.all([
+      Company.findById(chat.fromModel === "Company" ? chat.from : chat.to),
+      Developer.findById(chat.fromModel === "Developer" ? chat.from : chat.to),
+    ]);
+    if (company?.verificationStatus !== "verified" || developer?.verificationStatus !== "verified") {
+      return res.status(403).json({ message: "Both accounts must be admin verified before chatting." });
+    }
     const recipient = String(chat.from) === String(accountId) && chat.fromModel === senderModel
       ? { id: chat.to, model: chat.toModel }
       : { id: chat.from, model: chat.fromModel };
@@ -229,9 +253,25 @@ export const sendChatMessage = async (req, res) => {
 
 export const updateChatPhase = async (req, res) => {
   try {
-    const chat = await Chat.findByIdAndUpdate(req.params.id, { phase: req.body.phase }, { new: true, runValidators: true }).lean();
+    if (req.accountRole !== "company") return res.status(403).json({ message: "Only companies can update hiring phases." });
+    const existing = await Chat.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: "Chat not found." });
+    const ownsChat = String(existing.fromModel === "Company" ? existing.from : existing.to) === String(req.account._id);
+    if (!ownsChat) return res.status(403).json({ message: "You are not a participant in this chat." });
+
+    existing.phase = req.body.phase;
+    await existing.save();
+    if (req.body.phase === "Hired") {
+      const developerId = existing.fromModel === "Developer" ? existing.from : existing.to;
+      await Hire.findOneAndUpdate(
+        { companyId: req.account._id, developerId },
+        { $setOnInsert: { companyId: req.account._id, developerId, hiredAt: new Date() } },
+        { upsert: true, new: true }
+      );
+    }
+    const chat = existing.toObject();
     if (!chat) return res.status(404).json({ message: "Chat not found." });
-    res.status(200).json(await publicChat(chat, req.body.accountId, req.body.role));
+    res.status(200).json(await publicChat(chat, req.account._id, req.accountRole));
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

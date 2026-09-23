@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Filter, MapPin, MessageSquare, Search, SlidersHorizontal } from "lucide-react";
-import { apiRequest, getAuth } from "../api";
+import { Filter, MapPin, MessageSquare, Search } from "lucide-react";
+import { apiRequest } from "../api";
 
 const HirePage = () => {
   const [filters, setFilters] = useState({
@@ -12,7 +12,6 @@ const HirePage = () => {
   });
   const [developers, setDevelopers] = useState([]);
   const [error, setError] = useState("");
-  const account = getAuth();
 
   useEffect(() => {
     apiRequest("/developers")
@@ -42,7 +41,7 @@ const HirePage = () => {
     try {
       await apiRequest("/chats", {
         method: "POST",
-        body: JSON.stringify({ accountId: account?.id, role: "company", developerId }),
+        body: JSON.stringify({ developerId }),
       });
       window.location.href = "/company-chat";
     } catch (requestError) {
@@ -91,7 +90,6 @@ const HirePage = () => {
             <option>Within 2 weeks</option>
             <option>Within 1 month</option>
           </select>
-          <Link to="/company-filter" className="btn-secondary-action"><SlidersHorizontal size={16} /> More filters</Link>
         </section>
 
         <div className="result-line">

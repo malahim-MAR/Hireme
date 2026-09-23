@@ -34,6 +34,7 @@ const CompanyLogin = () => {
     try {
       const response = await fetch(`http://localhost:5001${endpoint}`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
@@ -54,8 +55,8 @@ const CompanyLogin = () => {
         return;
       }
 
-      saveAuth(data.account, "company");
-      navigate(data.account.verificationStatus === "verified" ? "/hire" : "/waiting-review", {
+      saveAuth(data.account, "company", data.token);
+      navigate(data.account.verificationStatus === "verified" ? "/company-dashboard" : "/waiting-review", {
         state: { account: { ...data.account, role: "company" } },
       });
     } catch (err) {

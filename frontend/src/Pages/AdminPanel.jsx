@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, Clock, RefreshCw, XCircle } from "lucide-react";
+import { adminRequest, clearAdminAuth, getAdminToken, saveAdminToken } from "../api";
 
 const statusLabels = {
   admin_pending: "Waiting review",
@@ -13,40 +14,60 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notes, setNotes] = useState({});
+  const [summary, setSummary] = useState({ hiresThisMonth: 0, hires: [] });
+  const [password, setPassword] = useState("");
+  const [isAdminAuthed, setIsAdminAuthed] = useState(Boolean(getAdminToken()));
 
   const fetchAccounts = async () => {
     try {
       setLoading(true);
       setError("");
-      const response = await fetch("http://localhost:5001/api/auth/admin/pending");
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.message || "Unable to load pending accounts.");
-      setAccounts(data);
+      const [accountData, summaryData] = await Promise.all([
+        adminRequest("/auth/admin/pending"),
+        adminRequest("/auth/admin/summary"),
+      ]);
+      setAccounts(accountData);
+      setSummary(summaryData);
     } catch (err) {
       setError(err.message);
+      if (err.message.includes("Admin authentication")) {
+        clearAdminAuth();
+        setIsAdminAuthed(false);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAccounts();
-  }, []);
+    if (isAdminAuthed) fetchAccounts();
+  }, [isAdminAuthed]);
+
+  const handleAdminLogin = async (event) => {
+    event.preventDefault();
+    setError("");
+    try {
+      const data = await adminRequest("/auth/admin/login", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+      saveAdminToken(data.token);
+      setIsAdminAuthed(true);
+      setPassword("");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const reviewAccount = async (role, id, verificationStatus) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/auth/admin/${role}/${id}/review`, {
+      await adminRequest(`/auth/admin/${role}/${id}/review`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           verificationStatus,
           adminNotes: notes[id] || "",
         }),
       });
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.message || "Unable to update review.");
       await fetchAccounts();
     } catch (err) {
       setError(err.message);
@@ -106,6 +127,28 @@ const AdminPanel = () => {
     );
   };
 
+  if (!isAdminAuthed) {
+    return (
+      <main className="auth-page">
+        <section className="auth-card">
+          <div className="auth-header">
+            <span className="eyebrow">Admin</span>
+            <h1>Admin sign in</h1>
+            <p>Use the separate admin password to review accounts and hiring activity.</p>
+          </div>
+          {error && <div className="error-banner">{error}</div>}
+          <form className="auth-form" onSubmit={handleAdminLogin}>
+            <label>
+              <span>Password</span>
+              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+            </label>
+            <button type="submit" className="btn-primary-action auth-submit">Open admin</button>
+          </form>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="workflow-page">
       <div className="workflow-shell">
@@ -119,6 +162,9 @@ const AdminPanel = () => {
             <button type="button" className="btn-secondary-action" onClick={fetchAccounts}>
               <RefreshCw size={16} /> Refresh
             </button>
+            <button type="button" className="danger-button" onClick={() => { clearAdminAuth(); setIsAdminAuthed(false); }}>
+              Sign out
+            </button>
           </div>
         </header>
 
@@ -126,8 +172,27 @@ const AdminPanel = () => {
         {loading ? (
           <section className="panel"><p>Loading pending accounts...</p></section>
         ) : (
-          <div className="dashboard-two-col">
-            <section className="panel">
+          <>
+            <section className="metric-grid" aria-label="Admin hiring metrics">
+              <article className="metric-card">
+                <CheckCircle2 size={20} />
+                <span>Hires this month</span>
+                <strong>{summary.hiresThisMonth}</strong>
+              </article>
+              <article className="metric-card">
+                <Clock size={20} />
+                <span>Pending companies</span>
+                <strong>{accounts.companies.filter((account) => account.verificationStatus === "admin_pending").length}</strong>
+              </article>
+              <article className="metric-card">
+                <Clock size={20} />
+                <span>Pending developers</span>
+                <strong>{accounts.developers.filter((account) => account.verificationStatus === "admin_pending").length}</strong>
+              </article>
+            </section>
+
+            <div className="dashboard-two-col">
+              <section className="panel">
               <div className="panel-header">
                 <h2>Companies</h2>
                 <span>{accounts.companies.length} pending</span>
@@ -137,9 +202,9 @@ const AdminPanel = () => {
                   ? accounts.companies.map((account) => renderAccount(account, "company"))
                   : <p className="empty-note">No pending company accounts.</p>}
               </div>
-            </section>
+              </section>
 
-            <section className="panel">
+              <section className="panel">
               <div className="panel-header">
                 <h2>Developers</h2>
                 <span>{accounts.developers.length} pending</span>
@@ -149,8 +214,30 @@ const AdminPanel = () => {
                   ? accounts.developers.map((account) => renderAccount(account, "developer"))
                   : <p className="empty-note">No pending developer accounts.</p>}
               </div>
+              </section>
+            </div>
+
+            <section className="panel">
+              <div className="panel-header">
+                <h2>Hire history</h2>
+                <span>{summary.hires.length} records</span>
+              </div>
+              <div className="pipeline-table">
+                <div className="table-row table-head">
+                  <span>Company</span>
+                  <span>Developer</span>
+                  <span>Hired at</span>
+                </div>
+                {summary.hires.map((hire) => (
+                  <div className="table-row" key={hire.id}>
+                    <span>{hire.companyName}</span>
+                    <span>{hire.developerName}</span>
+                    <span>{new Date(hire.hiredAt).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
             </section>
-          </div>
+          </>
         )}
       </div>
     </main>

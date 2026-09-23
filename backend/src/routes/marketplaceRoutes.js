@@ -10,17 +10,18 @@ import {
   updateCompanyProfile,
   updateDeveloperProfile,
 } from "../controllers/marketplaceController.js";
+import { requireAnyVerified, requireAuth, requireVerifiedRole } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/developers", getDevelopers);
-router.get("/developers/:id/profile", getDeveloperProfile);
-router.patch("/developers/:id/profile", updateDeveloperProfile);
-router.get("/companies/:id/profile", getCompanyProfile);
-router.patch("/companies/:id/profile", updateCompanyProfile);
-router.get("/chats", getChats);
-router.post("/chats", createChat);
-router.post("/chats/:id/messages", sendChatMessage);
-router.patch("/chats/:id/phase", updateChatPhase);
+router.get("/developers", requireAuth, requireVerifiedRole("company"), getDevelopers);
+router.get("/developers/:id/profile", requireAuth, requireAnyVerified, getDeveloperProfile);
+router.patch("/developers/:id/profile", requireAuth, requireVerifiedRole("developer"), updateDeveloperProfile);
+router.get("/companies/:id/profile", requireAuth, requireVerifiedRole("company"), getCompanyProfile);
+router.patch("/companies/:id/profile", requireAuth, requireVerifiedRole("company"), updateCompanyProfile);
+router.get("/chats", requireAuth, requireAnyVerified, getChats);
+router.post("/chats", requireAuth, requireVerifiedRole("company"), createChat);
+router.post("/chats/:id/messages", requireAuth, requireAnyVerified, sendChatMessage);
+router.patch("/chats/:id/phase", requireAuth, requireVerifiedRole("company"), updateChatPhase);
 
 export default router;

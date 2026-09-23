@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, MapPin, MessageSquare, Search } from "lucide-react";
-import { apiRequest, getAuth } from "../api";
+import { apiRequest } from "../api";
 
 const CompanyFilter = () => {
   const [filters, setFilters] = useState({
@@ -13,7 +13,6 @@ const CompanyFilter = () => {
   });
   const [developers, setDevelopers] = useState([]);
   const [error, setError] = useState("");
-  const account = getAuth();
 
   useEffect(() => {
     apiRequest("/developers")
@@ -36,7 +35,7 @@ const CompanyFilter = () => {
     try {
       await apiRequest("/chats", {
         method: "POST",
-        body: JSON.stringify({ accountId: account?.id, role: "company", developerId }),
+        body: JSON.stringify({ developerId }),
       });
       window.location.href = "/company-chat";
     } catch (requestError) {

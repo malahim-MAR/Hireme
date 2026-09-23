@@ -33,6 +33,7 @@ const DevLogin = () => {
     try {
       const response = await fetch(`http://localhost:5001${endpoint}`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
@@ -52,7 +53,7 @@ const DevLogin = () => {
         return;
       }
 
-      saveAuth(data.account, "developer");
+      saveAuth(data.account, "developer", data.token);
       navigate(data.account.verificationStatus === "verified" ? "/dev-dashboard" : "/waiting-review", {
         state: { account: { ...data.account, role: "developer" } },
       });

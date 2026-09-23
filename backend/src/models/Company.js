@@ -56,6 +56,11 @@ const companySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      enum: ["company"],
+      default: "company",
+    },
     emailVerified: {
       type: Boolean,
       default: false,
@@ -66,8 +71,12 @@ const companySchema = new mongoose.Schema(
     },
     verificationStatus: {
       type: String,
-      enum: ["email_pending", "admin_pending", "verified", "needs_info", "rejected"],
-      default: "email_pending",
+      enum: ["admin_pending", "verified", "needs_info", "rejected"],
+      default: "admin_pending",
+    },
+    adminNote: {
+      type: String,
+      default: "",
     },
     adminNotes: {
       type: String,

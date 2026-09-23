@@ -19,7 +19,7 @@ const CompanyChat = () => {
 
   useEffect(() => {
     if (!account?.id) return;
-    apiRequest(`/chats?accountId=${account.id}&role=company`)
+    apiRequest("/chats")
       .then(setConversations)
       .catch((requestError) => setError(requestError.message));
   }, [account?.id]);
@@ -37,7 +37,7 @@ const CompanyChat = () => {
     try {
       const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/messages`, {
         method: "POST",
-        body: JSON.stringify({ accountId: account.id, role: "company", text: messageInput }),
+        body: JSON.stringify({ text: messageInput }),
       });
       setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
       setMessageInput("");
@@ -51,7 +51,7 @@ const CompanyChat = () => {
     try {
       const updatedChat = await apiRequest(`/chats/${conversations[activeChat].id}/phase`, {
         method: "PATCH",
-        body: JSON.stringify({ accountId: account.id, role: "company", phase: event.target.value }),
+        body: JSON.stringify({ phase: event.target.value }),
       });
       setConversations((current) => current.map((conversation, index) => index === activeChat ? updatedChat : conversation));
       setError("");
