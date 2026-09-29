@@ -71,7 +71,7 @@ const DevChat = () => {
                     <span className="chat-list-time">{formatChatTime(conversation.time)}</span>
                   </div>
                   <p className="chat-list-preview">{conversation.lastMessage}</p>
-                  <span className="phase-pill">{conversation.phase}</span>
+                  <span className="phase-label">{conversation.phase}</span>
                 </div>
                 {conversation.unread > 0 && <span className="chat-unread-badge">{conversation.unread}</span>}
               </button>
@@ -90,7 +90,7 @@ const DevChat = () => {
 
           <div className="chat-messages">
             {activeConversation.messages.map((message, index) => (
-              <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "dev" ? "chat-bubble-sent" : "chat-bubble-received"}`}>
+                <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "dev" ? "chat-bubble-sent dev" : "chat-bubble-received"}`}>
                 <p>{message.text}</p>
                 <span className="chat-bubble-time">{formatChatTime(message.time)}</span>
               </div>
@@ -105,7 +105,7 @@ const DevChat = () => {
               onChange={(event) => setMessageInput(event.target.value)}
               className="chat-input"
             />
-            <button type="submit" className="chat-send-btn" disabled={!messageInput.trim()}><Send size={16} /> Send</button>
+            <button type="submit" className="chat-send-btn dev" disabled={!messageInput.trim()}><Send size={16} /> Send</button>
           </form>
         </section> : <section className="chat-main chat-empty-state"><div className="empty-panel"><p>No conversations yet. Companies will appear here after they contact you.</p></div></section>}
       </div>

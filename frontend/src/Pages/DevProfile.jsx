@@ -78,18 +78,26 @@ const DevProfile = () => {
     }
   };
 
+  const profileInitials = (profile.fullName || account?.name || "Developer")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <main className="workflow-page">
+    <main className="workflow-page dev-surface">
       <div className="workflow-shell">
         <header className="workflow-header">
           <div>
-            <span className="eyebrow">Developer profile</span>
+            <span className="section-label">Developer profile</span>
             <h1>{profile.fullName}</h1>
             <p>Keep your details current so companies know your stack, location, and availability.</p>
           </div>
           <div className="workflow-actions">
-            <Link to="/dev-dashboard" className="btn-secondary-action">Dashboard</Link>
-            <Link to="/dev-chat" className="btn-primary-action"><MessageSquare size={16} /> Chats</Link>
+            <Link to="/dev-dashboard" className="btn-text">Dashboard</Link>
+            <Link to="/dev-chat" className="btn-primary dev"><MessageSquare size={16} /> Chats</Link>
           </div>
         </header>
 
@@ -97,8 +105,8 @@ const DevProfile = () => {
         {saveMessage && <div className="success-banner">{saveMessage}</div>}
 
         <div className="profile-layout">
-          <aside className="profile-summary panel">
-            <div className="profile-avatar-large">ST</div>
+          <aside className="profile-sidebar">
+            <div className="profile-avatar-large">{profileInitials}</div>
             {isEditing ? (
               <>
                 <input name="fullName" value={profile.fullName} onChange={handleChange} />
@@ -106,33 +114,33 @@ const DevProfile = () => {
               </>
             ) : (
               <>
-                <h2>{profile.fullName}</h2>
-                <p>{profile.title}</p>
+                <h2 className="profile-name">{profile.fullName}</h2>
+                <p className="profile-title-text">{profile.title}</p>
               </>
             )}
             <div className="profile-badges">
-              <span className="phase-pill">{profile.level}</span>
-              <span className="phase-pill">{profile.experience}</span>
-              <span className="phase-pill">{profile.availability}</span>
+              {profile.level && <span className="profile-badge">{profile.level}</span>}
+              {profile.experience && <span className="profile-badge">{profile.experience}</span>}
+              {profile.availability && <span className="profile-badge">{profile.availability}</span>}
             </div>
             <div className="profile-actions">
               {isEditing ? (
                 <>
-                  <button className="btn-primary-action" type="button" onClick={handleSave}><Save size={16} /> Save</button>
-                  <button className="btn-secondary-action" type="button" onClick={() => setIsEditing(false)}>Cancel</button>
+                  <button className="btn-primary dev" type="button" onClick={handleSave}><Save size={16} /> Save</button>
+                  <button className="btn-text" type="button" onClick={() => setIsEditing(false)}>Cancel</button>
                 </>
               ) : (
                 <>
-                  <button className="btn-primary-action" type="button" onClick={() => setIsEditing(true)}>Edit profile</button>
+                  <button className="btn-primary dev" type="button" onClick={() => setIsEditing(true)}>Edit profile</button>
                   <button className="danger-button" type="button" onClick={handleDelete}><Trash2 size={16} /> Delete</button>
                 </>
               )}
             </div>
           </aside>
 
-          <section className="profile-details">
-            <article className="panel">
-              <div className="panel-header"><h2>About</h2></div>
+          <section className="profile-doc">
+            <article className="doc-section">
+              <h2 className="doc-section-title">About</h2>
               {isEditing ? (
                 <textarea name="bio" value={profile.bio} onChange={handleChange} rows={5} />
               ) : (
@@ -140,11 +148,11 @@ const DevProfile = () => {
               )}
             </article>
 
-            <article className="panel">
-              <div className="panel-header"><h2>Skills</h2></div>
+            <article className="doc-section">
+              <h2 className="doc-section-title">Skills</h2>
               <div className="hire-card-skills">
                 {profile.skills.map((skill) => (
-                  <span className="skill-tag editable-skill" key={skill}>
+                    <span className="skill-tag-mono editable-skill" key={skill}>
                     {skill}
                     {isEditing && (
                       <button type="button" onClick={() => handleRemoveSkill(skill)} aria-label={`Remove ${skill}`}>
@@ -167,13 +175,13 @@ const DevProfile = () => {
                       }
                     }}
                   />
-                  <button className="btn-secondary-action" type="button" onClick={handleAddSkill}>Add</button>
+                  <button className="btn-text" type="button" onClick={handleAddSkill}>Add</button>
                 </div>
               )}
             </article>
 
-            <article className="panel form-grid-panel">
-              <div className="panel-header"><h2>Details</h2></div>
+            <article className="doc-section">
+              <h2 className="doc-section-title">Details</h2>
               <div className="profile-form-grid">
                 <label>
                   <span>Experience level</span>
@@ -216,8 +224,8 @@ const DevProfile = () => {
               </div>
             </article>
 
-            <article className="panel form-grid-panel">
-              <div className="panel-header"><h2>Contact links</h2></div>
+            <article className="doc-section">
+              <h2 className="doc-section-title">Contact links</h2>
               <div className="profile-form-grid">
                 {["email", "github", "linkedin", "portfolio"].map((field) => (
                   <label key={field}>

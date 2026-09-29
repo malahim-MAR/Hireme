@@ -54,19 +54,21 @@ const HirePage = () => {
       <div className="workflow-shell">
         <header className="workflow-header">
           <div>
-            <span className="eyebrow">Company feed</span>
+            <span className="section-label">Company feed</span>
             <h1>Browse developer profiles</h1>
             <p>Review talent cards, apply a brief filter, and start conversations from the feed.</p>
           </div>
           <div className="workflow-actions">
-            <Link to="/company-dashboard" className="btn-secondary-action">Dashboard</Link>
-            <Link to="/company-chat" className="btn-primary-action"><MessageSquare size={16} /> Messages</Link>
+            <Link to="/company-dashboard" className="btn-text">Dashboard</Link>
+            <Link to="/company-chat" className="btn-primary company">
+              <MessageSquare size={15} /> Messages
+            </Link>
           </div>
         </header>
 
         <section className="filter-strip">
           <label className="search-field">
-            <Search size={16} />
+            <Search size={15} />
             <input
               name="search"
               value={filters.search}
@@ -93,7 +95,7 @@ const HirePage = () => {
         </section>
 
         <div className="result-line">
-          <Filter size={16} />
+          <Filter size={14} />
           <span>{filteredDevelopers.length} of {developers.length} developers shown</span>
         </div>
 
@@ -103,6 +105,7 @@ const HirePage = () => {
           {filteredDevelopers.map((dev) => (
             <article className="hire-card" key={dev.id}>
               <div className="hire-card-top">
+                {/* Flat initials chip — no rounded square, no shadow */}
                 <div className="hire-card-avatar">{dev.initials}</div>
                 <div>
                   <h3 className="hire-card-name">{dev.name}</h3>
@@ -114,12 +117,12 @@ const HirePage = () => {
 
               <div className="hire-card-skills">
                 {dev.skills.map((skill) => (
-                  <span className="skill-tag" key={skill}>{skill}</span>
+                  <span className="skill-tag-mono" key={skill}>{skill}</span>
                 ))}
               </div>
 
               <div className="hire-card-meta">
-                <span><MapPin size={14} /> {dev.city}, {dev.country}</span>
+                <span><MapPin size={13} /> {dev.city}, {dev.country}</span>
                 <span>{dev.level} / {dev.experience}</span>
                 <span className={`hire-avail ${dev.availability === "Immediately" ? "avail-now" : ""}`}>
                   {dev.availability}
@@ -132,8 +135,14 @@ const HirePage = () => {
               </div>
 
               <div className="hire-card-actions">
-                <button className="btn-secondary-action btn-sm" type="button">View profile</button>
-                <button type="button" className="btn-primary-action btn-sm" onClick={() => contactDeveloper(dev.id)}>Contact</button>
+                <button className="btn-text btn-sm" type="button">View profile</button>
+                <button
+                  type="button"
+                  className="btn-primary company btn-sm"
+                  onClick={() => contactDeveloper(dev.id)}
+                >
+                  Contact
+                </button>
               </div>
             </article>
           ))}

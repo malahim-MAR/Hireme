@@ -88,7 +88,7 @@ const CompanyChat = () => {
                     <span className="chat-list-time">{formatChatTime(conversation.time)}</span>
                   </div>
                   <p className="chat-list-preview">{conversation.lastMessage}</p>
-                  <span className="phase-pill">{conversation.phase}</span>
+                  <span className="phase-label">{conversation.phase}</span>
                 </div>
                 {conversation.unread > 0 && <span className="chat-unread-badge">{conversation.unread}</span>}
               </button>
@@ -104,7 +104,7 @@ const CompanyChat = () => {
                 <span className="chat-status">{activeConversation.devTitle || "Developer"}</span>
             </div>
             <label className="phase-select">
-              <span>Phase</span>
+              <span className="phase-select-label">Phase</span>
               <select value={activeConversation.phase} onChange={updatePhase}>
                 {pipelineStages.map((stage) => <option key={stage}>{stage}</option>)}
               </select>
@@ -113,7 +113,7 @@ const CompanyChat = () => {
 
           <div className="chat-messages">
             {activeConversation.messages.map((message, index) => (
-              <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "company" ? "chat-bubble-sent" : "chat-bubble-received"}`}>
+              <div key={`${message.time}-${index}`} className={`chat-bubble ${message.from === "company" ? "chat-bubble-sent company" : "chat-bubble-received"}`}>
                 <p>{message.text}</p>
                 <span className="chat-bubble-time">{formatChatTime(message.time)}</span>
               </div>
@@ -128,7 +128,7 @@ const CompanyChat = () => {
               onChange={(event) => setMessageInput(event.target.value)}
               className="chat-input"
             />
-            <button type="submit" className="chat-send-btn" disabled={!messageInput.trim()}><Send size={16} /> Send</button>
+            <button type="submit" className="chat-send-btn company" disabled={!messageInput.trim()}><Send size={16} /> Send</button>
           </form>
         </section> : <section className="chat-main chat-empty-state"><div className="empty-panel"><p>No conversations yet. Contact a developer from the browse page to start one.</p></div></section>}
       </div>

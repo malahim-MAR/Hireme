@@ -1,5 +1,6 @@
 /* ==========================================================================
-   ThinkBoard — Navbar Styles
+   ThinkBoard — Navbar v2
+   Text-only nav links with underline on hover, no pill backgrounds
    ========================================================================== */
 
 .tb-navbar {
@@ -7,217 +8,155 @@
   top: 0;
   z-index: 50;
   width: 100%;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
-  transition: all 0.2s ease;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
 }
 
 .tb-navbar-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
-  height: 64px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
 }
 
-/* Brand styling */
+/* Brand */
 .tb-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
-  color: var(--text-primary);
+  color: var(--ink);
   user-select: none;
+  flex-shrink: 0;
 }
+.tb-brand:hover { text-decoration: none; }
 
-.tb-brand:focus-visible {
-  border-radius: var(--radius-md);
-}
-
+/* Logo mark — three vertical bars */
 .tb-logo-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  background: var(--ink);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.tb-brand:hover .tb-logo-icon {
-  transform: scale(1.05);
 }
 
 .tb-logo-dot {
   width: 4px;
-  border-radius: 4px;
-  transition: height 0.25s ease;
+  border-radius: 2px;
+  background-color: rgba(255,255,255,0.85);
+  transition: height 0.2s ease;
 }
+.tb-dot-1 { height: 10px; }
+.tb-dot-2 { height: 16px; }
+.tb-dot-3 { height: 12px; }
 
-.tb-dot-1 {
-  height: 12px;
-  background-color: var(--stage-applied-dot);
-}
-
-.tb-dot-2 {
-  height: 18px;
-  background-color: var(--stage-interview-dot);
-}
-
-.tb-dot-3 {
-  height: 14px;
-  background-color: var(--stage-offer-dot);
-}
-
-.tb-brand:hover .tb-dot-1 {
-  height: 16px;
-}
-
-.tb-brand:hover .tb-dot-2 {
-  height: 12px;
-}
-
-.tb-brand:hover .tb-dot-3 {
-  height: 18px;
-}
+.tb-brand:hover .tb-dot-1 { height: 14px; }
+.tb-brand:hover .tb-dot-2 { height: 10px; }
+.tb-brand:hover .tb-dot-3 { height: 16px; }
 
 .tb-brand-text {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 5px;
 }
 
 .tb-brand-title {
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0;
-  color: var(--text-primary);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
-.tb-brand-accent {
-  color: var(--brand-primary);
-}
+.tb-brand-accent { color: var(--dev-accent); }
 
 .tb-brand-tag {
   font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: var(--brand-primary-subtle);
-  color: var(--brand-primary);
-  border: 1px solid var(--brand-primary-border);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: rgba(20,23,26,0.07);
+  color: var(--text-secondary);
 }
 
-/* Nav Links */
+/* Nav links — text-only, underline on hover */
 .tb-nav-links {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .tb-nav-item {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  border-radius: var(--radius-md);
-  font-size: 13.5px;
+  gap: 6px;
+  padding: 6px 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: all 0.15s ease;
+  border-radius: 0;
+  transition: color 0.12s ease;
 }
-
 .tb-nav-item:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-subtle);
-  text-decoration: none;
+  color: var(--ink);
+  text-decoration: underline;
+  background: transparent;
 }
-
 .tb-nav-item.active {
-  color: var(--brand-primary);
-  background-color: var(--brand-primary-subtle);
+  color: var(--ink);
   font-weight: 600;
+  text-decoration: underline;
+  background: transparent;
 }
 
 /* Actions */
 .tb-navbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* Primary CTA (pre-login "Get started") */
 .tb-create-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background-color: var(--brand-primary);
+  gap: 7px;
+  background-color: var(--ink);
   color: #ffffff;
-  font-size: 13.5px;
+  font-family: var(--font-body);
+  font-size: 14px;
   font-weight: 600;
   padding: 8px 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  border-radius: var(--radius);
+  border: none;
   text-decoration: none;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25), 0 1px 2px rgba(37, 99, 235, 0.15);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.15s ease;
 }
+.tb-create-btn:hover { opacity: 0.85; color: #fff; text-decoration: none; }
 
-.tb-create-btn:hover {
-  background-color: var(--brand-primary-hover);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  transform: translateY(-1px);
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.tb-create-btn:active {
-  transform: translateY(0);
-}
-
-.tb-message-link {
-  border: 1px solid var(--border-subtle);
-}
+/* Message link — same as nav item */
+.tb-message-link { border: none; }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .tb-nav-links {
-    display: none;
-  }
-
-  .tb-message-link span {
-    display: none;
-  }
+  .tb-nav-links { display: none; }
+  .tb-message-link span { display: none; }
 }
 
 @media (max-width: 480px) {
-  .tb-navbar-container {
-    padding: 0 14px;
-    height: 56px;
-  }
-
-  .tb-brand-tag {
-    display: none;
-  }
-
-  .tb-create-btn {
-    padding: 7px 12px;
-    font-size: 12.5px;
-  }
-
-  .tb-create-btn-text {
-    display: inline;
-  }
+  .tb-navbar-container { padding: 0 14px; height: 52px; }
+  .tb-brand-tag { display: none; }
+  .tb-create-btn { padding: 7px 12px; font-size: 13px; }
 }

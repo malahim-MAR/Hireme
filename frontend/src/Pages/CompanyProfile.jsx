@@ -49,46 +49,46 @@ const CompanyProfile = () => {
   };
 
   return (
-    <main className="workflow-page">
+    <main className="workflow-page company-surface">
       <div className="workflow-shell">
         <header className="workflow-header">
           <div>
-            <span className="eyebrow">Company profile</span>
+            <span className="section-label">Company profile</span>
             <h1>{account?.companyName || "Company profile"}</h1>
             <p>Keep your company story, hiring history, and current hiring needs up to date.</p>
           </div>
           <div className="workflow-actions">
-            <Link to="/company-dashboard" className="btn-secondary-action">Dashboard</Link>
-            <Link to="/company-chat" className="btn-primary-action"><MessageSquare size={16} /> Chats</Link>
+            <Link to="/company-dashboard" className="btn-text">Dashboard</Link>
+            <Link to="/company-chat" className="btn-primary company"><MessageSquare size={16} /> Chats</Link>
           </div>
         </header>
 
         {error && <div className="error-banner">{error}</div>}
         {message && <div className="success-banner">{message}</div>}
 
-        <form className="profile-details" onSubmit={saveProfile}>
-          <section className="panel">
-            <div className="panel-header"><h2>About the company</h2></div>
+        <form className="profile-doc" onSubmit={saveProfile}>
+          <section className="doc-section">
+            <h2 className="doc-section-title">About the company</h2>
             <textarea value={profile.about} onChange={(event) => setProfile({ ...profile, about: event.target.value })} rows={5} />
           </section>
-          <section className="panel form-grid-panel">
-            <div className="panel-header"><h2>Hiring metrics</h2></div>
+          <section className="doc-section">
+            <h2 className="doc-section-title">Hiring metrics</h2>
             <div className="profile-form-grid">
               <label><span>Total hires</span><input type="number" min="0" value={profile.totalHires} onChange={(event) => setProfile({ ...profile, totalHires: Number(event.target.value) })} /></label>
               <label><span>Open roles</span><input type="number" min="0" value={profile.openRoles} onChange={(event) => setProfile({ ...profile, openRoles: Number(event.target.value) })} /></label>
             </div>
           </section>
-          <section className="panel">
-            <div className="panel-header"><h2>Preferred stacks</h2></div>
-            <div className="hire-card-skills">{profile.preferredStacks.map((stack) => <span className="skill-tag" key={stack}>{stack}</span>)}</div>
-            <div className="skill-add-row"><input value={stackText} onChange={(event) => setStackText(event.target.value)} placeholder="React, Node.js" /><button type="button" className="btn-secondary-action" onClick={() => addValue("preferredStacks", stackText, setStackText)}>Add</button></div>
+          <section className="doc-section">
+            <h2 className="doc-section-title">Preferred stacks</h2>
+            <div className="hire-card-skills">{profile.preferredStacks.map((stack) => <span className="skill-tag-outline" key={stack}>{stack}</span>)}</div>
+            <div className="skill-add-row"><input value={stackText} onChange={(event) => setStackText(event.target.value)} placeholder="React, Node.js" /><button type="button" className="btn-text" onClick={() => addValue("preferredStacks", stackText, setStackText)}>Add</button></div>
           </section>
-          <section className="panel">
-            <div className="panel-header"><h2>Hiring history</h2></div>
+          <section className="doc-section">
+            <h2 className="doc-section-title">Hiring history</h2>
             <div className="notification-list">{profile.hiringHistory.map((item) => <p className="notification-item" key={item}>{item}</p>)}</div>
-            <div className="skill-add-row"><input value={historyText} onChange={(event) => setHistoryText(event.target.value)} placeholder="2025: hired 4 developers" /><button type="button" className="btn-secondary-action" onClick={() => addValue("hiringHistory", historyText, setHistoryText)}>Add</button></div>
+            <div className="skill-add-row"><input value={historyText} onChange={(event) => setHistoryText(event.target.value)} placeholder="2025: hired 4 developers" /><button type="button" className="btn-text" onClick={() => addValue("hiringHistory", historyText, setHistoryText)}>Add</button></div>
           </section>
-          <button type="submit" className="btn-primary-action"><Save size={16} /> Save profile</button>
+          <button type="submit" className="btn-primary company"><Save size={16} /> Save profile</button>
         </form>
       </div>
     </main>

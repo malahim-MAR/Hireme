@@ -1,7 +1,36 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, MessageSquare, TrendingUp, Users } from "lucide-react";
 import { apiRequest, getAuth } from "../api";
+
+const PIPELINE_STAGES = ["Intro", "Screening", "Interview", "Offer", "Hired"];
+
+const phaseMatchesStage = (phase = "", stage = "") => {
+  const normalizedPhase = phase.toLowerCase();
+  const normalizedStage = stage.toLowerCase();
+  if (normalizedStage === "interview") return normalizedPhase.includes("interview");
+  return normalizedPhase === normalizedStage;
+};
+
+const PipelineTracker = ({ phases }) => {
+  // Show which stages actually have candidates
+  return (
+    <div className="pipeline-tracker company" role="list">
+      {PIPELINE_STAGES.map((stage, i) => {
+        const hasCount = phases.some((p) => phaseMatchesStage(p.stage, stage) && p.count > 0);
+        return (
+          <div
+            key={stage}
+            className={`pipeline-step${hasCount ? " active" : ""}`}
+            role="listitem"
+          >
+            <div className="pipeline-step-dot" />
+            <span className="pipeline-step-label">{stage}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const CompanyDashboard = () => {
   const account = getAuth();
@@ -44,41 +73,38 @@ const CompanyDashboard = () => {
       <div className="workflow-shell">
         <header className="workflow-header">
           <div>
-            <span className="eyebrow">Company dashboard</span>
+            <span className="section-label">Company dashboard</span>
             <h1>Hiring pipeline</h1>
             <p>Track contacted developers, replies, and where each candidate sits in the process.</p>
           </div>
           <div className="workflow-actions">
-            <Link to="/company-profile" className="btn-secondary-action">Company profile</Link>
-            <Link to="/hire" className="btn-secondary-action">Browse devs</Link>
-            <Link to="/company-chat" className="btn-primary-action">Open chats</Link>
+            <Link to="/company-profile" className="btn-text">Company profile</Link>
+            <Link to="/hire" className="btn-text">Browse devs</Link>
+            <Link to="/company-chat" className="btn-primary company">Open chats</Link>
           </div>
         </header>
 
         {error && <div className="error-banner">{error}</div>}
 
-        <section className="metric-grid" aria-label="Company hiring metrics">
-          <article className="metric-card">
-            <Users size={20} />
-            <span>Contacted</span>
-            <strong>{stats.contacted}</strong>
-          </article>
-          <article className="metric-card">
-            <MessageSquare size={20} />
-            <span>Replied</span>
-            <strong>{stats.replied}</strong>
-          </article>
-          <article className="metric-card">
-            <TrendingUp size={20} />
-            <span>Reply rate</span>
-            <strong>{stats.replyRate}%</strong>
-          </article>
-          <article className="metric-card">
-            <Bell size={20} />
-            <span>Active chats</span>
-            <strong>{stats.activeChats}</strong>
-          </article>
-        </section>
+        {/* Ledger row — single strip, 4 cells */}
+        <div className="ledger-row" aria-label="Company hiring metrics">
+          <div className="ledger-cell">
+            <span className="ledger-number">{stats.contacted}</span>
+            <span className="ledger-label">Contacted</span>
+          </div>
+          <div className="ledger-cell">
+            <span className="ledger-number">{stats.replied}</span>
+            <span className="ledger-label">Replied</span>
+          </div>
+          <div className="ledger-cell">
+            <span className="ledger-number">{stats.replyRate}%</span>
+            <span className="ledger-label">Reply rate</span>
+          </div>
+          <div className="ledger-cell">
+            <span className="ledger-number">{stats.activeChats}</span>
+            <span className="ledger-label">Active chats</span>
+          </div>
+        </div>
 
         <div className="dashboard-two-col">
           <section className="panel">
@@ -86,16 +112,29 @@ const CompanyDashboard = () => {
               <h2>Phase breakdown</h2>
               <span>{developers.length} profiles</span>
             </div>
-            <div className="stage-list">
+            {/* Stepped pipeline tracker */}
+            <PipelineTracker phases={stageCounts} />
+            <div className="stage-list" style={{ marginTop: "16px" }}>
               {stageCounts.map(({ stage, count }) => (
-                <div className="stage-row" key={stage}>
-                  <span>{stage}</span>
-                  <div className="stage-meter" aria-hidden="true">
-                    <span style={{ width: `${developers.length ? (count / developers.length) * 100 : 0}%` }} />
-                  </div>
-                  <strong>{count}</strong>
+                <div
+                  key={stage}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto",
+                    gap: "8px",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid var(--line)",
+                    fontSize: "14px",
+                  }}
+                >
+                  <span style={{ color: "var(--text-secondary)" }}>{stage}</span>
+                  <strong style={{ fontFamily: "var(--font-display)", fontSize: "16px" }}>{count}</strong>
                 </div>
               ))}
+              {stageCounts.length === 0 && (
+                <p className="empty-note">No active pipeline stages yet.</p>
+              )}
             </div>
           </section>
 
@@ -133,9 +172,16 @@ const CompanyDashboard = () => {
             </div>
             {developers.map((dev) => (
               <div className="table-row" key={dev.id}>
-                <span className="person-cell"><span className="avatar-token">{dev.initials}</span>{dev.name}</span>
+                <span className="person-cell">
+                  <span className="avatar-token">{dev.initials}</span>
+                  {dev.name}
+                </span>
                 <span>{dev.title}</span>
-                <span><span className="phase-pill">{chatByDeveloper.get(String(dev.id))?.phase || "No active chat"}</span></span>
+                <span>
+                  <span className="phase-label">
+                    {chatByDeveloper.get(String(dev.id))?.phase || "No active chat"}
+                  </span>
+                </span>
                 <span>{dev.availability || "Available"}</span>
               </div>
             ))}

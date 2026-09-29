@@ -97,7 +97,7 @@ const AdminPanel = () => {
     return (
       <article className="admin-account-card" key={account.id}>
         <div>
-          <span className="phase-pill">{statusLabels[account.verificationStatus]}</span>
+          <span className="phase-label">{statusLabels[account.verificationStatus]}</span>
           <h3>{role === "company" ? account.companyName : account.name}</h3>
           <p>{role === "company" ? account.workEmail : account.email}</p>
         </div>
