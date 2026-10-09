@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getChats,
+  markChatRead,
   createChat,
   getCompanyProfile,
   getDeveloperProfile,
@@ -22,6 +23,7 @@ router.patch("/companies/:id/profile", requireAuth, requireVerifiedRole("company
 router.get("/chats", requireAuth, requireAnyVerified, getChats);
 router.post("/chats", requireAuth, requireVerifiedRole("company"), createChat);
 router.post("/chats/:id/messages", requireAuth, requireAnyVerified, sendChatMessage);
+router.patch("/chats/:id/read", requireAuth, requireAnyVerified, markChatRead);
 router.patch("/chats/:id/phase", requireAuth, requireVerifiedRole("company"), updateChatPhase);
 
 export default router;

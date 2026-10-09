@@ -10,6 +10,8 @@ const CompanyProfile = () => {
   const [stackText, setStackText] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!account?.id) return;
@@ -24,20 +26,27 @@ const CompanyProfile = () => {
           hiringHistory: companyProfile.hiringHistory || [],
         });
       })
-      .catch((requestError) => setError(requestError.message));
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
   }, [account?.id]);
 
   const saveProfile = async (event) => {
     event.preventDefault();
+    if (loading || saving) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
     try {
       const data = await apiRequest(`/companies/${account.id}/profile`, {
         method: "PATCH",
         body: JSON.stringify(profile),
       });
       setProfile(data.companyProfile);
-      setMessage("Company profile saved to the database.");
+      setMessage("Company profile saved.");
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -88,7 +97,7 @@ const CompanyProfile = () => {
             <div className="notification-list">{profile.hiringHistory.map((item) => <p className="notification-item" key={item}>{item}</p>)}</div>
             <div className="skill-add-row"><input value={historyText} onChange={(event) => setHistoryText(event.target.value)} placeholder="2025: hired 4 developers" /><button type="button" className="btn-text" onClick={() => addValue("hiringHistory", historyText, setHistoryText)}>Add</button></div>
           </section>
-          <button type="submit" className="btn-primary company"><Save size={16} /> Save profile</button>
+          <button type="submit" className="btn-primary company" disabled={loading || saving}><Save size={16} /> {loading ? "Loading…" : saving ? "Saving…" : "Save profile"}</button>
         </form>
       </div>
     </main>

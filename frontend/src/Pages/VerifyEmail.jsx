@@ -1,3 +1,4 @@
+import { API_BASE } from "../api";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
@@ -10,7 +11,7 @@ const VerifyEmail = () => {
   useEffect(() => {
     const verify = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/auth/verify/${role}/${token}`);
+        const response = await fetch(`${API_BASE}/auth/verify/${role}/${token}`);
         const data = await response.json();
 
         if (!response.ok) {

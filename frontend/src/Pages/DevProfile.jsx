@@ -1,28 +1,32 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { MessageSquare, Save, Trash2 } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { MessageSquare, Save } from "lucide-react";
 import { apiRequest, getAuth } from "../api";
 
 const DevProfile = () => {
-  const navigate = useNavigate();
   const account = getAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({ fullName: "", title: "", bio: "", experience: "", level: "", country: "", city: "", email: "", github: "", linkedin: "", portfolio: "", skills: [], education: "", availability: "" });
   const [error, setError] = useState("");
   const [newSkill, setNewSkill] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const savedProfile = useRef(null);
 
   React.useEffect(() => {
     if (!account?.id) return;
     apiRequest(`/developers/${account.id}/profile`)
-      .then((data) => setProfile({
+      .then((data) => setProfile((current) => ({
+        ...current,
         ...data.profile,
         fullName: data.profile?.fullName || data.name,
         bio: data.profile?.about || "",
         email: data.email,
         skills: data.profile?.skills || [],
-      }))
-      .catch((requestError) => setError(requestError.message));
+      })))
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
   }, [account?.id]);
 
   const handleChange = (event) => {
@@ -45,6 +49,10 @@ const DevProfile = () => {
   };
 
   const handleSave = async () => {
+    if (saving || loading) return;
+    setSaving(true);
+    setError("");
+    setSaveMessage("");
     try {
       const data = await apiRequest(`/developers/${account.id}/profile`, {
         method: "PATCH",
@@ -66,15 +74,11 @@ const DevProfile = () => {
       });
       setProfile({ ...profile, ...data.profile, bio: data.profile.about });
       setIsEditing(false);
-      setSaveMessage("Profile saved to the database.");
+      setSaveMessage("Profile saved.");
     } catch (requestError) {
       setError(requestError.message);
-    }
-  };
-
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete your profile? This cannot be undone.")) {
-      navigate("/login");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -126,13 +130,12 @@ const DevProfile = () => {
             <div className="profile-actions">
               {isEditing ? (
                 <>
-                  <button className="btn-primary dev" type="button" onClick={handleSave}><Save size={16} /> Save</button>
-                  <button className="btn-text" type="button" onClick={() => setIsEditing(false)}>Cancel</button>
+                  <button className="btn-primary dev" type="button" disabled={saving} onClick={handleSave}><Save size={16} /> {saving ? "Saving…" : "Save"}</button>
+                  <button className="btn-text" type="button" disabled={saving} onClick={() => { setProfile(savedProfile.current); setIsEditing(false); setNewSkill(""); }}>Cancel</button>
                 </>
               ) : (
                 <>
-                  <button className="btn-primary dev" type="button" onClick={() => setIsEditing(true)}>Edit profile</button>
-                  <button className="danger-button" type="button" onClick={handleDelete}><Trash2 size={16} /> Delete</button>
+                  <button className="btn-primary dev" type="button" disabled={loading || Boolean(error)} onClick={() => { savedProfile.current = profile; setIsEditing(true); setSaveMessage(""); }}>Edit profile</button>
                 </>
               )}
             </div>

@@ -1,162 +1,29 @@
-/* ==========================================================================
-   ThinkBoard — Navbar v2
-   Text-only nav links with underline on hover, no pill backgrounds
-   ========================================================================== */
-
-.tb-navbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: 100%;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.tb-navbar-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-/* Brand */
-.tb-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--ink);
-  user-select: none;
-  flex-shrink: 0;
-}
-.tb-brand:hover { text-decoration: none; }
-
-/* Logo mark — three vertical bars */
-.tb-logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--ink);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-}
-
-.tb-logo-dot {
-  width: 4px;
-  border-radius: 2px;
-  background-color: rgba(255,255,255,0.85);
-  transition: height 0.2s ease;
-}
-.tb-dot-1 { height: 10px; }
-.tb-dot-2 { height: 16px; }
-.tb-dot-3 { height: 12px; }
-
-.tb-brand:hover .tb-dot-1 { height: 14px; }
-.tb-brand:hover .tb-dot-2 { height: 10px; }
-.tb-brand:hover .tb-dot-3 { height: 16px; }
-
-.tb-brand-text {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-}
-
-.tb-brand-title {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-
-.tb-brand-accent { color: var(--dev-accent); }
-
-.tb-brand-tag {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: 0;
-  padding: 1px 5px;
-  border-radius: 3px;
-  background-color: rgba(20,23,26,0.07);
-  color: var(--text-secondary);
-}
-
-/* Nav links — text-only, underline on hover */
-.tb-nav-links {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tb-nav-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-radius: 0;
-  transition: color 0.12s ease;
-}
-.tb-nav-item:hover {
-  color: var(--ink);
-  text-decoration: underline;
-  background: transparent;
-}
-.tb-nav-item.active {
-  color: var(--ink);
-  font-weight: 600;
-  text-decoration: underline;
-  background: transparent;
-}
-
-/* Actions */
-.tb-navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Primary CTA (pre-login "Get started") */
-.tb-create-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background-color: var(--ink);
-  color: #ffffff;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  border: none;
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-}
-.tb-create-btn:hover { opacity: 0.85; color: #fff; text-decoration: none; }
-
-/* Message link — same as nav item */
-.tb-message-link { border: none; }
-
-/* Responsive */
-@media (max-width: 768px) {
+.tb-navbar { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid var(--line); }
+.tb-navbar-container { width: min(1120px, calc(100% - 64px)); height: 72px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.tb-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; flex-shrink: 0; }
+.tb-logo-icon { display: grid; place-items: center; width: 31px; height: 31px; background: #edf5ef; border-radius: 8px; color: var(--dev-accent); }
+.tb-brand-title { font-size: 23px; letter-spacing: -1px; font-weight: 600; }
+.tb-brand-title > span { color: var(--dev-accent); }
+.tb-nav-links { display: flex; align-items: center; gap: 26px; }
+.tb-nav-item { text-decoration: none; font-size: 12px; color: var(--text-secondary); padding: 7px 0; border-bottom: 1px solid transparent; }
+.tb-nav-item:hover, .tb-nav-item.active { color: var(--dev-accent); }
+.tb-nav-item.active { border-color: var(--dev-accent); }
+.tb-navbar-actions { display: flex; align-items: center; gap: 14px; }
+.tb-create-btn { display: inline-flex; align-items: center; gap: 12px; color: white; background: var(--dev-accent); border-radius: 7px; padding: 9px 15px; text-decoration: none; font-size: 12px; }
+.tb-create-btn:hover { background: var(--dev-accent-hover); }
+.tb-account-name { color: var(--text-secondary); font-size: 11px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-signout, .tb-menu { display: flex; align-items: center; justify-content: center; background: transparent; border: 0; color: var(--text-secondary); padding: 6px; }
+.tb-signout:hover { color: var(--dev-accent); }
+.tb-menu { display: none; }
+.tb-nav-error { padding: 8px 16px; text-align: center; font-size: 12px; background: var(--danger-bg); color: var(--danger); }
+@media (max-width: 700px) {
+  .tb-navbar-container { width: calc(100% - 32px); height: 64px; gap: 12px; }
+  .tb-brand-title { font-size: 21px; }
+  .tb-menu { display: flex; }
   .tb-nav-links { display: none; }
-  .tb-message-link span { display: none; }
-}
-
-@media (max-width: 480px) {
-  .tb-navbar-container { padding: 0 14px; height: 52px; }
-  .tb-brand-tag { display: none; }
-  .tb-create-btn { padding: 7px 12px; font-size: 13px; }
+  .tb-nav-links.is-open { display: flex; position: absolute; left: 0; right: 0; top: 64px; flex-direction: column; align-items: stretch; gap: 0; background: white; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .tb-nav-item { padding: 12px; font-size: 14px; border: 0; }
+  .tb-nav-item.active { background: #edf5ef; border-radius: 6px; }
+  .tb-account-name { max-width: 95px; }
+  .tb-navbar-actions { gap: 8px; }
 }

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Hourglass, ShieldCheck, XCircle } from "lucide-react";
-import { authRequest, getAuth, saveAuth } from "../api";
+import { authRequest, dashboardFor, getAuth, saveAuth } from "../api";
 
 const WaitingReview = () => {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const [account, setAccount] = useState(state?.account || getAuth());
   const [formData, setFormData] = useState({});
   const [message, setMessage] = useState("");
@@ -12,13 +13,20 @@ const WaitingReview = () => {
   const isCompany = account?.type === "company" || account?.role === "company";
 
   useEffect(() => {
-    authRequest("/auth/me")
+    let mounted = true;
+    const check = () => authRequest("/auth/me")
       .then(({ account: currentAccount }) => {
+        if (!mounted) return;
         saveAuth(currentAccount, currentAccount.role);
-        setAccount(currentAccount);
+        setAccount((previous) => JSON.stringify(previous) === JSON.stringify(currentAccount) ? previous : currentAccount);
+        setError("");
+        if (currentAccount.verificationStatus === "verified") navigate(dashboardFor(currentAccount.role), { replace: true });
       })
-      .catch((requestError) => setError(requestError.message));
-  }, []);
+      .catch((requestError) => { if (mounted) setError(requestError.message); });
+    check();
+    const timer = setInterval(() => { if (document.visibilityState === "visible") check(); }, 10000);
+    return () => { mounted = false; clearInterval(timer); };
+  }, [navigate]);
 
   useEffect(() => {
     if (!account) return;
@@ -72,7 +80,7 @@ const WaitingReview = () => {
           {account?.verificationStatus === "rejected" ? <XCircle size={28} /> : <Hourglass size={28} />}
         </div>
         <span className="eyebrow">{isCompany ? "Company verification" : "Developer verification"}</span>
-        <h1>{account?.verificationStatus === "rejected" ? "Review was rejected" : "Admin will confirm your identity verification"}</h1>
+        <h1>{account?.verificationStatus === "rejected" ? "Your profile wasn't approved" : "Your profile is under review"}</h1>
         {account?.verificationStatus === "admin_pending" && (
           <p>Your profile is under review in the admin panel. Once verified, your workspace will open automatically.</p>
         )}

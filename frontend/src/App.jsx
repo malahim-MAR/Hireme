@@ -22,7 +22,7 @@ import PublicOnlyRoute from './Components/PublicOnlyRoute'
 const App = () => {
   return (
     <>
-      <div>
+      <div className="app-shell">
         <Navbar />
         <Routes>
           <Route path='/' element={<HomePage />} />
@@ -51,6 +51,7 @@ const App = () => {
             <Route path='/company-chat' element={<CompanyChat />} />
           </Route>
           <Route path='/admin' element={<AdminPanel />} />
+          <Route path='*' element={<main className="workflow-page"><div className="workflow-shell"><section className="empty-panel"><h1>Page not found</h1><p><a href="/">Return home</a></p></section></div></main>} />
         </Routes>
         <Footer />
       </div>

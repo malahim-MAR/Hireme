@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Filter, MapPin, MessageSquare, Search } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Filter, MapPin, MessageSquare, Search, X } from "lucide-react";
 import { apiRequest } from "../api";
 
 const HirePage = () => {
@@ -12,11 +12,17 @@ const HirePage = () => {
   });
   const [developers, setDevelopers] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [contacting, setContacting] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const dialog = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     apiRequest("/developers")
       .then(setDevelopers)
-      .catch((requestError) => setError(requestError.message));
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const stacks = useMemo(() => [...new Set(developers.flatMap((dev) => dev.skills))], [developers]);
@@ -38,14 +44,19 @@ const HirePage = () => {
   };
 
   const contactDeveloper = async (developerId) => {
+    if (contacting) return;
+    setContacting(developerId);
+    setError("");
     try {
-      await apiRequest("/chats", {
+      const chat = await apiRequest("/chats", {
         method: "POST",
         body: JSON.stringify({ developerId }),
       });
-      window.location.href = "/company-chat";
+      navigate(`/company-chat?chat=${chat.id}`);
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setContacting(null);
     }
   };
 
@@ -54,9 +65,9 @@ const HirePage = () => {
       <div className="workflow-shell">
         <header className="workflow-header">
           <div>
-            <span className="section-label">Company feed</span>
-            <h1>Browse developer profiles</h1>
-            <p>Review talent cards, apply a brief filter, and start conversations from the feed.</p>
+            <span className="section-label">Find talent</span>
+            <h1>A great team starts here.</h1>
+            <p>Explore verified developers and find the right person for your next chapter.</p>
           </div>
           <div className="workflow-actions">
             <Link to="/company-dashboard" className="btn-text">Dashboard</Link>
@@ -74,20 +85,21 @@ const HirePage = () => {
               value={filters.search}
               onChange={updateFilter}
               placeholder="Search name, role, country, or skill"
+              aria-label="Search developers"
             />
           </label>
-          <select name="level" value={filters.level} onChange={updateFilter}>
-            <option>All</option>
+          <select name="level" aria-label="Experience level" value={filters.level} onChange={updateFilter}>
+            <option value="All">All levels</option>
             <option>Junior</option>
             <option>Mid</option>
             <option>Senior</option>
           </select>
-          <select name="stack" value={filters.stack} onChange={updateFilter}>
-            <option>All</option>
+          <select name="stack" aria-label="Skills" value={filters.stack} onChange={updateFilter}>
+            <option value="All">All skills</option>
             {stacks.map((stack) => <option key={stack}>{stack}</option>)}
           </select>
-          <select name="availability" value={filters.availability} onChange={updateFilter}>
-            <option>All</option>
+          <select name="availability" aria-label="Availability" value={filters.availability} onChange={updateFilter}>
+            <option value="All">Any availability</option>
             <option>Immediately</option>
             <option>Within 2 weeks</option>
             <option>Within 1 month</option>
@@ -122,31 +134,32 @@ const HirePage = () => {
               </div>
 
               <div className="hire-card-meta">
-                <span><MapPin size={13} /> {dev.city}, {dev.country}</span>
+                <span><MapPin size={13} /> {[dev.city, dev.country].filter(Boolean).join(", ") || "Location not provided"}</span>
                 <span>{dev.level} / {dev.experience}</span>
                 <span className={`hire-avail ${dev.availability === "Immediately" ? "avail-now" : ""}`}>
                   {dev.availability}
                 </span>
               </div>
 
-              <div className="phase-line">
-                <span>Current phase</span>
-                <strong>{dev.availability || "Profile available"}</strong>
-              </div>
-
               <div className="hire-card-actions">
-                <button className="btn-text btn-sm" type="button">View profile</button>
+                <button className="btn-text btn-sm" type="button" onClick={() => { setSelected(dev); dialog.current.showModal(); }}>View profile</button>
                 <button
                   type="button"
                   className="btn-primary company btn-sm"
                   onClick={() => contactDeveloper(dev.id)}
+                  disabled={Boolean(contacting)}
                 >
-                  Contact
+                  {contacting === dev.id ? "Opening…" : "Contact"}
                 </button>
               </div>
             </article>
           ))}
+          {loading && <section className="empty-panel" role="status">Loading developers…</section>}
+          {!loading && !filteredDevelopers.length && <section className="empty-panel"><h2>{developers.length ? "No matches yet" : "New talent is on the way"}</h2><p>{developers.length ? "Try a different search or clear your filters." : "Verified developer profiles will appear here."}</p>{developers.length > 0 && <button type="button" className="btn-text" onClick={() => setFilters({ search: "", level: "All", availability: "All", stack: "All" })}>Clear filters</button>}</section>}
         </div>
+        <dialog ref={dialog} className="profile-modal" onClick={(event) => { if (event.target === event.currentTarget) dialog.current.close(); }}>
+          {selected && <><div className="profile-modal-header"><div><span className="section-label">Developer profile</span><h2>{selected.profile?.fullName || selected.name}</h2><p>{selected.title}</p></div><button type="button" className="icon-button" aria-label="Close profile" onClick={() => dialog.current.close()}><X size={18} /></button></div><p>{selected.bio || "This developer hasn't added a bio yet."}</p><div className="hire-card-skills">{selected.skills.map((skill) => <span className="skill-tag" key={skill}>{skill}</span>)}</div><div className="profile-form-grid"><div><span className="section-label">Experience</span>{selected.experience}</div><div><span className="section-label">Location</span>{[selected.city, selected.country].filter(Boolean).join(", ") || "Not provided"}</div><div><span className="section-label">Availability</span>{selected.availability || "Not provided"}</div><div><span className="section-label">Education</span>{selected.profile?.education || "Not provided"}</div></div><div className="workflow-actions" style={{ marginTop: 24 }}><button type="button" className="btn-primary" disabled={Boolean(contacting)} onClick={() => contactDeveloper(selected.id)}>Start a conversation</button></div></>}
+        </dialog>
       </div>
     </main>
   );

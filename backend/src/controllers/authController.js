@@ -66,7 +66,7 @@ const setSessionCookie = (res, token, name = "hiremeSession") => {
   res.cookie(name, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "Production",
+    secure: process.env.NODE_ENV?.toLowerCase() === "production",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };

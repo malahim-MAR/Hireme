@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { apiRequest, getAuth } from "../api";
+import useConversations from "../hooks/useConversations";
 
 const PIPELINE_STAGES = ["Intro", "Screening", "Interview", "Offer", "Hired"];
 
@@ -37,16 +37,7 @@ const PipelineTracker = ({ currentPhase }) => {
 };
 
 const DevDashboard = () => {
-  const account = getAuth();
-  const [conversations, setConversations] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!account?.id) return;
-    apiRequest("/chats")
-      .then(setConversations)
-      .catch((requestError) => setError(requestError.message));
-  }, [account?.id]);
+  const { conversations, error, loading } = useConversations();
 
   const activeCompanies = conversations.length;
   const unreadMessages = conversations.reduce((total, conversation) => total + conversation.unread, 0);
@@ -71,6 +62,7 @@ const DevDashboard = () => {
         </header>
 
         {error && <div className="error-banner">{error}</div>}
+        {loading && <p className="empty-note" role="status">Loading your pipeline…</p>}
 
         {/* Ledger row — single strip, no boxes */}
         <div className="ledger-row" aria-label="Developer outreach metrics">
@@ -96,14 +88,14 @@ const DevDashboard = () => {
             </div>
             <div className="company-phase-list">
               {conversations.map((conversation) => (
-                <article className="company-phase-card" key={conversation.id}>
+                <Link to={`/dev-chat?chat=${conversation.id}`} className="company-phase-card" style={{ textDecoration: "none" }} key={conversation.id}>
                   <span className="avatar-token">{conversation.companyInitials}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <strong>{conversation.companyName}</strong>
                     <p>{conversation.lastMessage}</p>
                   </div>
                   <span className="phase-label">{conversation.phase}</span>
-                </article>
+                </Link>
               ))}
               {conversations.length === 0 && (
                 <p className="empty-note">No active conversations yet.</p>
@@ -119,7 +111,6 @@ const DevDashboard = () => {
             <div className="stage-list">
               {pipelineStages.map((stage) => {
                 const count = conversations.filter((conversation) => conversation.phase === stage).length;
-                const pct = activeCompanies ? Math.round((count / activeCompanies) * 100) : 0;
                 return (
                   <div key={stage} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--line)", fontSize: "14px" }}>
                     <span style={{ color: "var(--text-secondary)" }}>{stage}</span>
