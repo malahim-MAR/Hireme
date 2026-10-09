@@ -24,6 +24,10 @@ router.post("/company/signup", companySignup);
 router.post("/company/login", companyLogin);
 
 router.get("/me", requireAuth, getSessionAccount);
+router.post("/logout", (_req, res) => {
+  res.clearCookie("hiremeSession", { path: "/" });
+  res.status(200).json({ message: "Signed out." });
+});
 router.patch("/resubmit", requireAuth, resubmitAccountReview);
 
 // Admin review routes

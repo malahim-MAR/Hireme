@@ -4,9 +4,15 @@ import Chat from "../models/Chat.js";
 import Developer from "../models/Developer.js";
 import DevProfile from "../models/DevProfile.js";
 import Hire from "../models/Hire.js";
+import mongoose from "mongoose";
 
-const roleModel = (role) => role === "company" ? Company : Developer;
 const modelName = (role) => role === "company" ? "Company" : "Developer";
+const phases = ["Intro", "Screening", "Technical Interview", "Final Interview", "Offer", "Negotiation", "Hired", "Rejected"];
+const isParticipant = (chat, id, role) =>
+  (String(chat.from) === String(id) && chat.fromModel === modelName(role)) ||
+  (String(chat.to) === String(id) && chat.toModel === modelName(role));
+const validId = (id) => mongoose.isValidObjectId(id);
+const validMessage = (text) => typeof text === "string" && text.trim().length > 0 && text.trim().length <= 5000;
 const initials = (name = "") => name.split(" ").filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
 const publicDeveloper = (developer, profile = {}) => ({
@@ -149,15 +155,20 @@ const accountName = async (id, model) => {
 const publicChat = async (chat, accountId, accountRole) => {
   const companyId = chat.fromModel === "Company" ? chat.from : chat.toModel === "Company" ? chat.to : null;
   const developerId = chat.fromModel === "Developer" ? chat.from : chat.toModel === "Developer" ? chat.to : null;
-  const companyName = companyId ? await accountName(companyId, "Company") : "Company";
-  const developerName = developerId ? await accountName(developerId, "Developer") : "Developer";
+  const [companyName, developerName, profile] = await Promise.all([
+    companyId ? accountName(companyId, "Company") : "Company",
+    developerId ? accountName(developerId, "Developer") : "Developer",
+    developerId ? DevProfile.findOne({ developer: developerId }).lean() : null,
+  ]);
   const messages = chat.messages.map((message) => ({
     id: message._id,
-    from: String(message.from) === String(accountId) && message.fromModel === modelName(accountRole) ? accountRole : message.fromModel === "Company" ? "company" : "dev",
+    from: message.fromModel === "Company" ? "company" : "dev",
     fromId: message.from,
     toId: message.to,
     text: message.text,
     time: message.createdAt,
+    readAt: message.readAt || null,
+    clientMessageId: message.clientMessageId,
   }));
   return {
     id: chat._id,
@@ -165,13 +176,15 @@ const publicChat = async (chat, accountId, accountRole) => {
     developerId,
     companyName,
     developerName,
+    devName: developerName,
+    devTitle: profile?.title || "Developer",
     companyInitials: initials(companyName),
     devInitials: initials(developerName),
     phase: chat.phase,
     messages,
     lastMessage: messages.at(-1)?.text || "",
     time: messages.at(-1)?.time || chat.updatedAt,
-    unread: 0,
+    unread: chat.messages.filter((message) => String(message.to) === String(accountId) && message.toModel === modelName(accountRole) && !message.readAt).length,
   };
 };
 
@@ -196,7 +209,7 @@ export const createChat = async (req, res) => {
     const { developerId, text = "" } = req.body;
     const accountId = req.account._id;
     const role = req.accountRole;
-    if (role !== "company" || !developerId) {
+    if (role !== "company" || !validId(developerId) || typeof text !== "string" || text.trim().length > 5000) {
       return res.status(400).json({ message: "A company account and developer are required." });
     }
     const developer = await Developer.findById(developerId);
@@ -213,10 +226,21 @@ export const createChat = async (req, res) => {
       ],
     });
     if (!chat) {
-      chat = new Chat({ from: accountId, fromModel: "Company", to: developerId, toModel: "Developer" });
+      const pairKey = `${accountId}:${developerId}`;
+      try {
+        chat = await Chat.findOneAndUpdate({ pairKey }, {
+          $setOnInsert: { from: accountId, fromModel: "Company", to: developerId, toModel: "Developer", pairKey },
+        }, { upsert: true, new: true, runValidators: true });
+      } catch (error) {
+        if (error.code !== 11000) throw error;
+        chat = await Chat.findOne({ pairKey });
+      }
     }
-    if (text.trim()) chat.messages.push({ from: accountId, fromModel: "Company", to: developerId, toModel: "Developer", text: text.trim() });
-    await chat.save();
+    if (text.trim()) {
+      chat = await Chat.findByIdAndUpdate(chat._id, { $push: { messages: {
+        from: accountId, fromModel: "Company", to: developerId, toModel: "Developer", text: text.trim(),
+      } } }, { new: true, runValidators: true });
+    }
     res.status(201).json(await publicChat(chat.toObject(), accountId, role));
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -225,14 +249,16 @@ export const createChat = async (req, res) => {
 
 export const sendChatMessage = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, clientMessageId } = req.body;
     const accountId = req.account._id;
     const role = req.accountRole;
+    if (!validId(req.params.id) || !validMessage(text) || (clientMessageId !== undefined && (typeof clientMessageId !== "string" || !clientMessageId || clientMessageId.length > 100))) {
+      return res.status(400).json({ message: "Messages must contain between 1 and 5,000 characters." });
+    }
     const chat = await Chat.findById(req.params.id);
-    if (!chat || !accountId || !text?.trim()) return res.status(400).json({ message: "A valid chat and message are required." });
+    if (!chat) return res.status(404).json({ message: "Chat not found." });
     const senderModel = modelName(role);
-    const isParticipant = (String(chat.from) === String(accountId) && chat.fromModel === senderModel) || (String(chat.to) === String(accountId) && chat.toModel === senderModel);
-    if (!isParticipant) return res.status(403).json({ message: "You are not a participant in this chat." });
+    if (!isParticipant(chat, accountId, role)) return res.status(403).json({ message: "You are not a participant in this chat." });
     const [company, developer] = await Promise.all([
       Company.findById(chat.fromModel === "Company" ? chat.from : chat.to),
       Developer.findById(chat.fromModel === "Developer" ? chat.from : chat.to),
@@ -243,9 +269,12 @@ export const sendChatMessage = async (req, res) => {
     const recipient = String(chat.from) === String(accountId) && chat.fromModel === senderModel
       ? { id: chat.to, model: chat.toModel }
       : { id: chat.from, model: chat.fromModel };
-    chat.messages.push({ from: accountId, fromModel: senderModel, to: recipient.id, toModel: recipient.model, text: text.trim() });
-    await chat.save();
-    res.status(200).json(await publicChat(chat.toObject(), accountId, role));
+    const filter = { _id: chat._id };
+    if (clientMessageId) filter.messages = { $not: { $elemMatch: { clientMessageId, from: accountId, fromModel: senderModel } } };
+    const updated = await Chat.findOneAndUpdate(filter, { $push: { messages: {
+      from: accountId, fromModel: senderModel, to: recipient.id, toModel: recipient.model, text: text.trim(), clientMessageId,
+    } } }, { new: true, runValidators: true });
+    res.status(200).json(await publicChat((updated || await Chat.findById(chat._id)).toObject(), accountId, role));
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -254,13 +283,13 @@ export const sendChatMessage = async (req, res) => {
 export const updateChatPhase = async (req, res) => {
   try {
     if (req.accountRole !== "company") return res.status(403).json({ message: "Only companies can update hiring phases." });
+    if (!validId(req.params.id) || !phases.includes(req.body.phase)) return res.status(400).json({ message: "Choose a valid hiring phase." });
     const existing = await Chat.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: "Chat not found." });
     const ownsChat = String(existing.fromModel === "Company" ? existing.from : existing.to) === String(req.account._id);
     if (!ownsChat) return res.status(403).json({ message: "You are not a participant in this chat." });
 
-    existing.phase = req.body.phase;
-    await existing.save();
+    const updated = await Chat.findByIdAndUpdate(existing._id, { $set: { phase: req.body.phase } }, { new: true, runValidators: true });
     if (req.body.phase === "Hired") {
       const developerId = existing.fromModel === "Developer" ? existing.from : existing.to;
       await Hire.findOneAndUpdate(
@@ -269,9 +298,29 @@ export const updateChatPhase = async (req, res) => {
         { upsert: true, new: true }
       );
     }
-    const chat = existing.toObject();
+    const chat = updated.toObject();
     if (!chat) return res.status(404).json({ message: "Chat not found." });
     res.status(200).json(await publicChat(chat, req.account._id, req.accountRole));
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const markChatRead = async (req, res) => {
+  try {
+    if (!validId(req.params.id) || !validId(req.body.lastMessageId)) return res.status(400).json({ message: "A valid chat and last message are required." });
+    const chat = await Chat.findById(req.params.id);
+    if (!chat) return res.status(404).json({ message: "Chat not found." });
+    if (!isParticipant(chat, req.account._id, req.accountRole)) return res.status(403).json({ message: "You are not a participant in this chat." });
+    const index = chat.messages.findIndex((message) => String(message._id) === req.body.lastMessageId);
+    if (index < 0) return res.status(400).json({ message: "Message not found in this conversation." });
+    const ids = chat.messages.slice(0, index + 1).filter((message) =>
+      String(message.to) === String(req.account._id) && message.toModel === modelName(req.accountRole) && !message.readAt
+    ).map((message) => message._id);
+    if (ids.length) await Chat.updateOne({ _id: chat._id }, { $set: { "messages.$[message].readAt": new Date() } }, {
+      arrayFilters: [{ "message._id": { $in: ids } }], timestamps: false,
+    });
+    res.status(200).json({ readMessageIds: ids });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

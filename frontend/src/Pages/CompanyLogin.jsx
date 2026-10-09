@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { saveAuth } from "../api";
+import { authRequest, saveAuth } from "../api";
 
 const initialFormData = {
   companyName: "",
@@ -20,6 +20,8 @@ const CompanyLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (event) => {
@@ -28,11 +30,14 @@ const CompanyLogin = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (loading) return;
+    setLoading(true);
     setError("");
-    const endpoint = isLogin ? "/api/auth/company/login" : "/api/auth/company/signup";
+    setSuccess("");
+    const endpoint = isLogin ? "/auth/company/login" : "/auth/company/signup";
 
     try {
-      const response = await fetch(`http://localhost:5001${endpoint}`, {
+      const data = await authRequest(endpoint, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -42,16 +47,9 @@ const CompanyLogin = () => {
           totalBranches: Number(formData.totalBranches),
         }),
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Something went wrong.");
-        return;
-      }
-
       if (!isLogin) {
         setIsLogin(true);
-        setError("Account created. Please sign in. Admin review starts after login.");
+        setSuccess("Account created. Sign in to continue.");
         return;
       }
 
@@ -61,12 +59,14 @@ const CompanyLogin = () => {
       });
     } catch (err) {
       setError(err.message || "Failed to connect to server.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
+      <section className={`auth-card ${isLogin ? "auth-card-signin" : ""}`}>
         <div className="auth-header">
           <span className="eyebrow">Company access</span>
           <h1>{isLogin ? "Company sign in" : "Create company profile"}</h1>
@@ -78,6 +78,7 @@ const CompanyLogin = () => {
         </div>
 
         {error && <div className="error-banner">{error}</div>}
+        {success && <div className="success-banner" role="status">{success}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {!isLogin && (
@@ -137,15 +138,15 @@ const CompanyLogin = () => {
             <input type="password" name="password" value={formData.password} onChange={handleChange} required />
           </label>
 
-          <button type="submit" className="btn-primary-action auth-submit">
-            {isLogin ? "Sign in" : "Sign up"}
+          <button type="submit" className="btn-primary-action auth-submit" disabled={loading}>
+            {loading ? "Please wait…" : isLogin ? "Sign in" : "Create account"}
           </button>
         </form>
 
         <div className="auth-toggle">
           <p>
             {isLogin ? "Need a company account?" : "Already registered?"}{" "}
-            <button type="button" className="text-button" onClick={() => setIsLogin(!isLogin)}>
+            <button type="button" className="text-button" disabled={loading} onClick={() => { setIsLogin(!isLogin); setError(""); setSuccess(""); }}>
               {isLogin ? "Create one" : "Sign in"}
             </button>
           </p>

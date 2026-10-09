@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest, getAuth } from "../api";
+import useConversations from "../hooks/useConversations";
 
 const PIPELINE_STAGES = ["Intro", "Screening", "Interview", "Offer", "Hired"];
 
@@ -15,7 +16,7 @@ const PipelineTracker = ({ phases }) => {
   // Show which stages actually have candidates
   return (
     <div className="pipeline-tracker company" role="list">
-      {PIPELINE_STAGES.map((stage, i) => {
+      {PIPELINE_STAGES.map((stage) => {
         const hasCount = phases.some((p) => phaseMatchesStage(p.stage, stage) && p.count > 0);
         return (
           <div
@@ -35,23 +36,17 @@ const PipelineTracker = ({ phases }) => {
 const CompanyDashboard = () => {
   const account = getAuth();
   const [developers, setDevelopers] = useState([]);
-  const [conversations, setConversations] = useState([]);
+  const { conversations, error: chatError } = useConversations();
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!account?.id) return;
-    Promise.all([
-      apiRequest("/developers"),
-      apiRequest("/chats"),
-    ]).then(([developerData, chatData]) => {
-      setDevelopers(developerData);
-      setConversations(chatData);
-    }).catch((requestError) => setError(requestError.message));
+    apiRequest("/developers").then(setDevelopers).catch((requestError) => setError(requestError.message));
   }, [account?.id]);
 
   const stats = useMemo(() => {
     const contacted = conversations;
-    const replied = contacted.filter((conversation) => conversation.messages.at(-1)?.from === "dev");
+    const replied = contacted.filter((conversation) => conversation.messages.some((message) => message.from === "dev"));
 
     return {
       contacted: contacted.length,
@@ -65,7 +60,7 @@ const CompanyDashboard = () => {
   const chatByDeveloper = new Map(conversations.map((conversation) => [String(conversation.developerId), conversation]));
   const stageCounts = pipelineStages.map((stage) => ({
     stage,
-    count: developers.filter((dev) => chatByDeveloper.get(String(dev.id))?.phase === stage).length,
+    count: conversations.filter((chat) => chat.phase === stage).length,
   }));
 
   return (
@@ -84,7 +79,7 @@ const CompanyDashboard = () => {
           </div>
         </header>
 
-        {error && <div className="error-banner">{error}</div>}
+        {(error || chatError) && <div className="error-banner">{error || chatError}</div>}
 
         {/* Ledger row — single strip, 4 cells */}
         <div className="ledger-row" aria-label="Company hiring metrics">

@@ -1,43 +1,11 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-
-const HomePage = () => {
-  return (
-    <main className="start-page">
-      <section className="start-hero">
-        <div className="start-copy">
-          <span className="section-label">HireMe access</span>
-          <h1>Choose how you want to enter</h1>
-          <p>
-            Companies and developers use separate workspaces. Pick your role,
-            create your profile, then admin verifies your identity before the dashboard opens.
-          </p>
-        </div>
-
-        <div className="role-choice-grid" aria-label="Choose account type">
-          <Link to="/company-login" className="role-choice-card company-card">
-            <span className="section-label">I am hiring</span>
-            <strong>Company</strong>
-            <p>Post your company details, browse verified developers, and manage hiring chats.</p>
-            <span className="role-action">Continue as company <ArrowRight size={15} /></span>
-          </Link>
-
-          <Link to="/login" className="role-choice-card developer-card">
-            <span className="section-label">I want work</span>
-            <strong>Developer</strong>
-            <p>Create your profile, get reviewed by admin, and reply to company conversations.</p>
-            <span className="role-action">Continue as developer <ArrowRight size={15} /></span>
-          </Link>
-        </div>
-
-        <div className="start-review-strip">
-          <ShieldCheck size={16} />
-          <span>Signup leads to login, login leads to admin identity verification, verification unlocks the correct workspace.</span>
-        </div>
-      </section>
-    </main>
-  );
-};
-
-export default HomePage;
+import { Link } from 'react-router-dom';
+import { ArrowRight, Building2, Code2, ShieldCheck } from 'lucide-react';
+export default function HomePage() {
+  return <main className="start-page"><section className="start-hero">
+    <div className="start-copy"><span className="home-kicker"><i /> A little simpler. A better fit.</span><h1>Your next chapter<br />starts with <span>a connection.</span></h1><p>A focused space for developers and companies to find each other, start a conversation, and move forward.</p></div>
+    <div className="role-choice-grid" aria-label="Choose account type">
+      <Link to="/company-login" className="role-choice-card"><span className="role-icon"><Building2 size={21} strokeWidth={1.6} /></span><strong>Find your next teammate.</strong><p>Discover verified developers and keep every hiring conversation in one place.</p><span className="role-action">I'm hiring <ArrowRight size={17} /></span></Link>
+      <Link to="/login" className="role-choice-card"><span className="role-icon"><Code2 size={21} strokeWidth={1.6} /></span><strong>Find your next opportunity.</strong><p>Show what you do best and connect with companies looking for someone like you.</p><span className="role-action">I'm a developer <ArrowRight size={17} /></span></Link>
+    </div><div className="start-review-strip"><ShieldCheck size={14} /><span>Every profile is reviewed, so you can connect with confidence.</span></div>
+  </section></main>;
+}

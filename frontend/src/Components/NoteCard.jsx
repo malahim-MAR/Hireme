@@ -1,3 +1,4 @@
+import { API_BASE } from "../api";
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import {
@@ -49,7 +50,7 @@ const NoteCard = () => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5001/api/notes');
+      const res = await axios.get(`${API_BASE}/notes`);
       setNotes(Array.isArray(res.data) ? res.data : []);
       setIsRateLimited(false);
       setError(null);
@@ -137,7 +138,7 @@ const NoteCard = () => {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5001/api/notes/${id}`);
+      await axios.delete(`${API_BASE}/notes/${id}`);
       setNotes((prev) => prev.filter((note) => note._id !== id));
       toast.success('Application removed from pipeline');
     } catch (err) {
@@ -152,7 +153,7 @@ const NoteCard = () => {
     e.preventDefault();
     try {
       setUpdatingStatusId(note._id);
-      await axios.put(`http://localhost:5001/api/notes/${note._id}`, {
+      await axios.put(`${API_BASE}/notes/${note._id}`, {
         ...note,
         Status: newStatus,
       });
