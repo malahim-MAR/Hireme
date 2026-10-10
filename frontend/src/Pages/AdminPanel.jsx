@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, Clock, RefreshCw, XCircle } from "lucide-react";
-import { adminRequest, clearAdminAuth, getAdminToken, saveAdminToken } from "../api";
+import { adminRequest } from "../api";
 
 const statusLabels = {
   admin_pending: "Waiting review",
@@ -15,8 +15,6 @@ const AdminPanel = () => {
   const [error, setError] = useState("");
   const [notes, setNotes] = useState({});
   const [summary, setSummary] = useState({ hiresThisMonth: 0, hires: [] });
-  const [password, setPassword] = useState("");
-  const [isAdminAuthed, setIsAdminAuthed] = useState(Boolean(getAdminToken()));
 
   const fetchAccounts = async () => {
     try {
@@ -30,34 +28,14 @@ const AdminPanel = () => {
       setSummary(summaryData);
     } catch (err) {
       setError(err.message);
-      if (err.message.includes("Admin authentication")) {
-        clearAdminAuth();
-        setIsAdminAuthed(false);
-      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (isAdminAuthed) fetchAccounts();
-  }, [isAdminAuthed]);
-
-  const handleAdminLogin = async (event) => {
-    event.preventDefault();
-    setError("");
-    try {
-      const data = await adminRequest("/auth/admin/login", {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      });
-      saveAdminToken(data.token);
-      setIsAdminAuthed(true);
-      setPassword("");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+    fetchAccounts();
+  }, []);
 
   const reviewAccount = async (role, id, verificationStatus) => {
     try {
@@ -127,28 +105,6 @@ const AdminPanel = () => {
     );
   };
 
-  if (!isAdminAuthed) {
-    return (
-      <main className="auth-page">
-        <section className="auth-card">
-          <div className="auth-header">
-            <span className="eyebrow">Admin</span>
-            <h1>Admin sign in</h1>
-            <p>Use the separate admin password to review accounts and hiring activity.</p>
-          </div>
-          {error && <div className="error-banner">{error}</div>}
-          <form className="auth-form" onSubmit={handleAdminLogin}>
-            <label>
-              <span>Password</span>
-              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
-            </label>
-            <button type="submit" className="btn-primary-action auth-submit">Open admin</button>
-          </form>
-        </section>
-      </main>
-    );
-  }
-
   return (
     <main className="workflow-page">
       <div className="workflow-shell">
@@ -161,9 +117,6 @@ const AdminPanel = () => {
           <div className="workflow-actions">
             <button type="button" className="btn-secondary-action" onClick={fetchAccounts}>
               <RefreshCw size={16} /> Refresh
-            </button>
-            <button type="button" className="danger-button" onClick={() => { clearAdminAuth(); setIsAdminAuthed(false); }}>
-              Sign out
             </button>
           </div>
         </header>

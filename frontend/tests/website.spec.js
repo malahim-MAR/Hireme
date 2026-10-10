@@ -147,7 +147,7 @@ test("profile pages, admin, and logout render without browser errors", async ({ 
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page.locator(".profile-name")).toHaveText("Sam Taylor");
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Admin sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Identity verification" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -162,8 +162,6 @@ test("admin review unlocks a waiting developer's workspace automatically", async
   const context = await browser.newContext();
   const admin = await context.newPage();
   await admin.goto("http://127.0.0.1:5173/admin");
-  await admin.getByLabel("Password", { exact: true }).fill("test-admin-password");
-  await admin.getByRole("button", { name: "Open admin", exact: true }).click();
   await expect(admin.getByRole("heading", { name: "Identity verification" })).toBeVisible();
   const card = admin.locator(".admin-account-card").filter({ hasText: "Pending Developer" });
   await expect(card).toBeVisible();
